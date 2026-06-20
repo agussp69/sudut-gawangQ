@@ -93,6 +93,11 @@
   @media (min-width: 768px) { padding-inline: 2rem; }
 }
 
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
 @utility reveal {
   opacity: 0;
   transform: translateY(16px);
