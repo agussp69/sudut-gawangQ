@@ -51,7 +51,7 @@ function ShopPage() {
   useEffect(() => {
     const t = setTimeout(() => {
       if (qInput !== (search.q ?? "")) {
-        navigate({ search: (prev) => ({ ...prev, q: qInput || undefined }) });
+        navigate({ search: (prev: ShopSearch) => ({ ...prev, q: qInput || undefined }) });
       }
     }, 400);
     return () => clearTimeout(t);
@@ -96,7 +96,7 @@ function ShopPage() {
   const products = productsQuery.data ?? [];
 
   function updateSearch(patch: Record<string, string | undefined>) {
-    navigate({ search: (prev) => ({ ...prev, ...patch }) });
+    navigate({ search: (prev: ShopSearch) => ({ ...prev, ...patch }) });
   }
 
   return (
