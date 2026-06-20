@@ -1,11 +1,31 @@
 import { useEffect, useState } from "react";
-import { Search, Heart, ShoppingBag, User, Menu, X } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { Search, Heart, ShoppingBag, User, Menu, X, LogOut } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-const links = ["Shop", "New Arrival", "Vintage", "Club", "National Team", "About", "Contact"];
+const links: { label: string; to: string; params?: Record<string, string> }[] = [
+  { label: "Shop", to: "/shop" },
+  { label: "New Arrival", to: "/shop" },
+  { label: "Vintage", to: "/shop" },
+  { label: "Klub", to: "/shop" },
+  { label: "Timnas", to: "/shop" },
+];
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -13,6 +33,12 @@ export function Navbar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  async function signOut() {
+    await supabase.auth.signOut();
+    toast.success("Berhasil keluar");
+    navigate({ to: "/" });
+  }
 
   return (
     <header
@@ -23,48 +49,61 @@ export function Navbar() {
       }`}
     >
       <div className="container-x flex h-16 items-center justify-between gap-6">
-        <a href="#" className="flex items-center gap-2 shrink-0">
+        <Link to="/" className="flex items-center gap-2 shrink-0">
           <span className="grid h-8 w-8 place-items-center rounded-sm bg-grass text-white font-black text-sm">
             SG
           </span>
-          <span className="font-extrabold tracking-tight text-forest text-lg">
-            Sudut Gawang
-          </span>
-        </a>
+          <span className="font-extrabold tracking-tight text-forest text-lg">Sudut Gawang</span>
+        </Link>
 
         <nav className="hidden lg:flex items-center gap-8 text-sm font-medium text-foreground/80">
           {links.map((l) => (
-            <a
-              key={l}
-              href="#"
-              className="hover:text-grass transition-colors relative after:absolute after:left-0 after:-bottom-1 after:h-px after:w-0 hover:after:w-full after:bg-grass after:transition-all"
+            <Link
+              key={l.label}
+              to={l.to}
+              className="hover:text-grass transition-colors"
+              activeProps={{ className: "text-grass" }}
             >
-              {l}
-            </a>
+              {l.label}
+            </Link>
           ))}
         </nav>
 
         <div className="flex items-center gap-1 text-foreground">
-          <button aria-label="Search" className="p-2 hover:text-grass transition-colors">
+          <Link to="/shop" aria-label="Search" className="p-2 hover:text-grass transition-colors">
             <Search className="h-[18px] w-[18px]" />
-          </button>
+          </Link>
           <button aria-label="Wishlist" className="p-2 hover:text-grass transition-colors hidden sm:inline-flex">
             <Heart className="h-[18px] w-[18px]" />
           </button>
           <button aria-label="Cart" className="relative p-2 hover:text-grass transition-colors">
             <ShoppingBag className="h-[18px] w-[18px]" />
-            <span className="absolute top-1 right-1 grid h-4 w-4 place-items-center rounded-full bg-grass text-[10px] font-bold text-white">
-              2
-            </span>
           </button>
-          <button aria-label="Login" className="p-2 hover:text-grass transition-colors hidden sm:inline-flex">
-            <User className="h-[18px] w-[18px]" />
-          </button>
-          <button
-            aria-label="Menu"
-            className="p-2 lg:hidden"
-            onClick={() => setOpen((o) => !o)}
-          >
+
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger className="p-2 hover:text-grass transition-colors">
+                <User className="h-[18px] w-[18px]" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="truncate">{user.email}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={signOut}>
+                  <LogOut className="h-4 w-4 mr-2" /> Keluar
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link
+              to="/auth"
+              aria-label="Login"
+              className="p-2 hover:text-grass transition-colors hidden sm:inline-flex"
+            >
+              <User className="h-[18px] w-[18px]" />
+            </Link>
+          )}
+
+          <button aria-label="Menu" className="p-2 lg:hidden" onClick={() => setOpen((o) => !o)}>
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
@@ -74,15 +113,20 @@ export function Navbar() {
         <nav className="lg:hidden border-t border-border bg-white">
           <div className="container-x py-4 flex flex-col gap-1">
             {links.map((l) => (
-              <a
-                key={l}
-                href="#"
+              <Link
+                key={l.label}
+                to={l.to}
                 className="py-2 text-sm font-medium hover:text-grass"
                 onClick={() => setOpen(false)}
               >
-                {l}
-              </a>
+                {l.label}
+              </Link>
             ))}
+            {!user && (
+              <Link to="/auth" className="py-2 text-sm font-medium hover:text-grass" onClick={() => setOpen(false)}>
+                Masuk / Daftar
+              </Link>
+            )}
           </div>
         </nav>
       )}
