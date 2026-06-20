@@ -1,79 +1,68 @@
+## Sudut Gawang — Iterasi 1: Fondasi (Auth + DB + Shop & Detail Produk)
 
-# Sudut Gawang — Premium Jersey Landing Page
+Scope iterasi pertama setelah Lovable Cloud aktif. Iterasi berikutnya: Cart → Checkout → Upload Bukti → Tracking → Profil → Admin Panel.
 
-A single-page, Swiss-design inspired landing page for an original football jersey store. Grass green + white palette, modern sans-serif typography, modular grid, generous whitespace, conversion-focused.
+### 1. Aktifkan Lovable Cloud
+Provisioning otomatis: Postgres + Auth + Storage. Tidak ada konfigurasi manual.
 
-## Scope
+### 2. Skema Database (migration penuh, siap untuk semua iterasi)
+Bikin semua tabel sekaligus agar tidak refactor di iterasi berikutnya, tapi UI iterasi 1 hanya pakai sebagian.
 
-One-page marketing site built as the home route (`src/routes/index.tsx`). No backend, no cart logic — this is a presentation/landing build. CTAs are visual only (or scroll to sections). Product data is hardcoded sample content.
+Tabel:
+- `profiles` — id (FK auth.users), full_name, phone, avatar_url
+- `user_roles` + enum `app_role` (`admin`, `customer`) + fungsi `has_role()` (SECURITY DEFINER) — pola anti-recursion sesuai standar
+- `brands` — id, name, slug
+- `categories` — id, name, slug (Klub, Timnas, Vintage, Training Kit, Jaket, New Arrival)
+- `products` — id, sku, name, slug, brand_id, category_id, club, country, season, description, price (numeric), discount_price, condition (`new`/`vintage`), badge (`new`/`vintage`/`limited`), is_published, thumbnail_url, created_at
+- `product_images` — product_id, url, sort_order
+- `product_sizes` — product_id, size (S/M/L/XL/XXL), stock
+- `addresses` — user_id, label, recipient, phone, province, city, district, postal_code, address, notes
+- `wishlist` — user_id, product_id (unique)
+- `cart_items` — user_id, product_id, size, quantity
+- `orders` — id, order_number (unik, format `SG-YYYYMMDD-XXXXXX`), user_id, subtotal, shipping_cost, total, status (enum: `awaiting_payment`, `awaiting_verification`, `paid`, `processing`, `packed`, `shipped`, `completed`, `rejected`), courier, shipping_address (snapshot jsonb), payment_method (bank), created_at, deadline_at
+- `order_items` — order_id, product_id, size, quantity, price (snapshot), name (snapshot)
+- `payment_proofs` — order_id, file_url, uploaded_at, status, rejection_reason
+- `shipments` — order_id, courier, tracking_number, shipped_at
+- `order_status_history` — order_id, status, note, changed_by, changed_at
+- `vouchers`, `banners`, `reviews`, `notifications` — struktur dasar (dipakai iterasi lanjutan)
 
-## Design System (tokens in `src/styles.css`)
+RLS untuk semua tabel + GRANT eksplisit ke `authenticated`/`anon`/`service_role` sesuai aturan. `products`, `product_images`, `product_sizes`, `brands`, `categories`, `banners` → SELECT publik (`anon`). Tabel milik user → kebijakan `auth.uid()`. Tabel admin-only → `has_role(auth.uid(), 'admin')`.
 
-- **Colors** (oklch equivalents of):
-  - `--background` #FFFFFF
-  - `--foreground` #111111 (charcoal body text)
-  - `--primary` #1B8F4D (grass green — CTAs, badges, accents)
-  - `--primary-foreground` #FFFFFF
-  - `--secondary` / heading `--accent-deep` #0E4D2A (dark forest green)
-  - `--muted` #F4F5F4 (soft gray bg)
-  - `--muted-foreground` #6B7280
-  - `--border` #E5E7EB
-- **Typography**: Inter (loaded via `<link>` in `__root.tsx`), weights 400/500/600/700/800. Single family, hierarchy via weight + size.
-- **Radius**: 12px default, 8px small.
-- **Shadows**: thin elevation (`0 1px 2px`, `0 8px 24px -12px`).
-- Add `--container-max: 1280px`.
+Trigger `handle_new_user` membuat row di `profiles` otomatis saat signup. Trigger `set_order_number` mengisi `order_number` unik. Trigger `audit_order_status` mencatat ke `order_status_history`.
 
-## Page Structure (sections, all in `src/routes/index.tsx` with extracted components)
+Storage bucket: `payment-proofs` (private, RLS), `product-images` (public).
 
-1. **AnnouncementBar** — thin green strip, 4 rotating value props.
-2. **Navbar** — sticky, transparent over hero → white + shadow on scroll. Logo left, nav center (Shop, New Arrival, Vintage, Club, National Team, About, Contact), icons right (Search, Wishlist, Cart, Login).
-3. **Hero** — 2-col grid. Left: H1 ("Jersey Original untuk Fans Sejati…"), subheadline, primary + secondary CTA, 3 trust indicators. Right: high-res jersey image with Swiss grid line overlay accent.
-4. **SocialProof** — horizontal stat strip (10.000+ Pelanggan, 5.000+ Terjual, 4.9/5, 100% Original).
-5. **FeaturedCategories** — 6-card grid (Klub, Timnas, Vintage, New Arrival, Training Kit, Jaket) with image, overlay, hover zoom.
-6. **WhyChoose** — 3×2 icon card grid (6 reasons).
-7. **FeaturedProducts** — 4-col product grid with badge, name, club, season, price, wishlist + cart icons.
-8. **BestSeller** — horizontal carousel (shadcn Carousel) with modern arrow nav.
-9. **NewArrival** — grid with green "New" badges.
-10. **VintageHighlight** — editorial section, dark forest green accent, headline "Legenda Tak Pernah Pudar.", CTA.
-11. **AuthenticityTimeline** — 5-step horizontal timeline with icons.
-12. **Reviews** — testimonial carousel cards (photo, name, stars, review, product).
-13. **FAQ** — shadcn Accordion, 5 questions.
-14. **Newsletter** — green full-width band, email input + Subscribe.
-15. **FinalCTA** — centered headline + 2 CTAs.
-16. **Footer** — 4 columns (Navigasi, Bantuan, Pembayaran, Ekspedisi) + bottom row with copyright, legal links, social icons.
+Seed data: 6 brand, 6 kategori, 12 produk contoh (campur club/national/vintage) dengan gambar yang sudah ada di `src/assets/`.
 
-## Images
+### 3. Auth (Email + Password)
+Route `src/routes/auth.tsx` — tab Login / Register, validasi Zod. `signUp` dengan `emailRedirectTo: window.location.origin`. Layout terproteksi pakai `src/routes/_authenticated/route.tsx` (managed integration). Hook `useAuth` + listener `onAuthStateChange` di `__root.tsx`. Tombol Login di Navbar → `/auth`; jika sudah login tampilkan menu profil + Logout.
 
-Generate 6–8 images via `imagegen` saved under `src/assets/`:
-- Hero jersey shot (premium, green/white tones)
-- 6 category tiles (club, national team, vintage, new arrival, training kit, jacket)
-- 4 featured product shots
-- 3 testimonial portraits
+Halaman Lupa Password: `/forgot-password` dan `/reset-password` (mandatory pair).
 
-All `<img>` get descriptive alt text. Use `loading="lazy"` except hero.
+### 4. Halaman Shop (`/shop`)
+- Data nyata dari `products` via `createServerFn` dengan publishable client (publik).
+- URL state via `validateSearch`: `q`, `category`, `brand`, `condition`, `min`, `max`, `sort`, `page`.
+- Layout: sidebar filter (Kategori, Brand, Kondisi, Range Harga) + grid produk 3–4 kolom + sort dropdown + pagination + skeleton + empty state.
+- Search bar dengan debounce → update URL.
+- Card produk: thumbnail, badge, nama, klub, harga, tombol Wishlist & Tambah ke Keranjang.
 
-## Motion & Interaction
+### 5. Halaman Detail Produk (`/produk/$slug`)
+- Loader fetch produk + images + sizes + related (kategori sama).
+- Layout 2 kolom: gallery (thumbnail kiri, main image dengan zoom on hover) | info (nama, klub, musim, harga, badge "Original", pilih ukuran dengan stok, qty, Wishlist, Tambah ke Keranjang, panduan ukuran via Dialog, deskripsi, info pengiriman).
+- Section Produk Terkait di bawah.
+- Breadcrumb di atas.
+- `head()` per produk (title, og:title, og:image dari thumbnail).
 
-- Fade-in on scroll via simple IntersectionObserver hook (`src/hooks/use-reveal.ts`).
-- Hover scale on cards (transform + transition).
-- Smooth scroll via CSS `scroll-behavior: smooth`.
-- Navbar scroll-state via `useEffect` scroll listener.
+### 6. Komponen pendukung
+- `Breadcrumb`, `Pagination`, `SkeletonProductCard`, `EmptyState`, `ProductFilters` (Sheet di mobile).
+- Toast pakai `sonner` (sudah ada).
+- Update `Navbar`: link Shop/Auth/Profile dinamis sesuai sesi.
 
-## SEO
+### 7. SEO & Aksesibilitas
+- `head()` per route (title, description, og, canonical).
+- Single H1 per halaman, alt text di semua `<img>`, `loading="lazy"` kecuali above-the-fold.
 
-- Route `head()`: title "Sudut Gawang — Jersey Sepak Bola Original" (<60 chars), meta description (<160), og:title/description/type=website, twitter:card=summary_large_image, og:image pointing to hero asset.
-- Single H1 in hero. Semantic `<header>`, `<nav>`, `<main>`, `<section>`, `<footer>`.
-- JSON-LD `Organization` script in head.
+### Di luar scope iterasi 1 (akan dikerjakan setelah disetujui)
+Cart page, Wishlist page, Checkout flow, Upload bukti transfer, Tracking, Riwayat, Profil, Address book, Admin panel (Dashboard/Produk/Pesanan/Verifikasi Pembayaran/Resi/Pelanggan/Banner/Voucher/Laporan), notifikasi, voucher logic, review system.
 
-## Files to create/modify
-
-- `src/styles.css` — extend tokens (colors, container var).
-- `src/routes/__root.tsx` — add Inter `<link>` tags (preconnect + stylesheet), keep existing shell.
-- `src/routes/index.tsx` — replace placeholder; compose all sections; set head meta + JSON-LD.
-- `src/components/landing/` — one file per section (AnnouncementBar, Navbar, Hero, SocialProof, FeaturedCategories, WhyChoose, FeaturedProducts, BestSeller, NewArrival, VintageHighlight, AuthenticityTimeline, Reviews, FAQ, Newsletter, FinalCTA, Footer).
-- `src/hooks/use-reveal.ts` — scroll reveal hook.
-- `src/assets/*.jpg` — generated imagery.
-
-## Out of scope
-
-Real cart/checkout, auth, product detail pages, CMS, backend, payments. All interactions are visual on this landing page.
+Setujui untuk saya mulai eksekusi iterasi ini?
