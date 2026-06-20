@@ -20,9 +20,10 @@ const searchSchema = z.object({
   condition: z.enum(["new", "vintage"]).optional(),
   sort: z.enum(["newest", "price_asc", "price_desc"]).optional(),
 });
+type ShopSearch = z.infer<typeof searchSchema>;
 
 export const Route = createFileRoute("/shop")({
-  validateSearch: (s) => searchSchema.parse(s),
+  validateSearch: (s: Record<string, unknown>): ShopSearch => searchSchema.parse(s),
   head: () => ({
     meta: [
       { title: "Shop Jersey Original — Sudut Gawang" },
