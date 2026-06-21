@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Search, Heart, ShoppingBag, User, Menu, X, LogOut } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Search, Heart, ShoppingBag, User, Menu, X, LogOut, Package, MapPin } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -13,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const links: { label: string; to: string; params?: Record<string, string> }[] = [
+const links: { label: string; to: string }[] = [
   { label: "Shop", to: "/shop" },
   { label: "New Arrival", to: "/shop" },
   { label: "Vintage", to: "/shop" },
@@ -33,6 +34,15 @@ export function Navbar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const cartCount = useQuery({
+    queryKey: ["cart-count", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { count } = await supabase.from("cart_items").select("*", { count: "exact", head: true });
+      return count ?? 0;
+    },
+  });
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -73,12 +83,19 @@ export function Navbar() {
           <Link to="/shop" aria-label="Search" className="p-2 hover:text-grass transition-colors">
             <Search className="h-[18px] w-[18px]" />
           </Link>
-          <button aria-label="Wishlist" className="p-2 hover:text-grass transition-colors hidden sm:inline-flex">
-            <Heart className="h-[18px] w-[18px]" />
-          </button>
-          <button aria-label="Cart" className="relative p-2 hover:text-grass transition-colors">
+          {user && (
+            <Link to="/akun/wishlist" aria-label="Wishlist" className="p-2 hover:text-grass transition-colors hidden sm:inline-flex">
+              <Heart className="h-[18px] w-[18px]" />
+            </Link>
+          )}
+          <Link to={user ? "/cart" : "/auth"} aria-label="Cart" className="relative p-2 hover:text-grass transition-colors">
             <ShoppingBag className="h-[18px] w-[18px]" />
-          </button>
+            {!!cartCount.data && (
+              <span className="absolute -top-0.5 -right-0.5 bg-grass text-white text-[10px] font-bold rounded-full h-4 min-w-4 px-1 grid place-items-center">
+                {cartCount.data}
+              </span>
+            )}
+          </Link>
 
           {user ? (
             <DropdownMenu>
@@ -87,6 +104,11 @@ export function Navbar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel className="truncate">{user.email}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild><Link to="/akun/profil"><User className="h-4 w-4 mr-2" />Profil</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/akun/pesanan"><Package className="h-4 w-4 mr-2" />Pesanan</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/akun/alamat"><MapPin className="h-4 w-4 mr-2" />Alamat</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/akun/wishlist"><Heart className="h-4 w-4 mr-2" />Wishlist</Link></DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut}>
                   <LogOut className="h-4 w-4 mr-2" /> Keluar

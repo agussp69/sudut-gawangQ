@@ -720,6 +720,23 @@ export type Database = {
         }
         Returns: boolean
       }
+      place_order: {
+        Args: {
+          p_courier: string
+          p_notes?: string
+          p_payment_method: string
+          p_shipping_address: Json
+          p_shipping_cost: number
+        }
+        Returns: {
+          order_id: string
+          order_number: string
+        }[]
+      }
+      submit_payment_proof: {
+        Args: { p_file_url: string; p_order_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "customer"

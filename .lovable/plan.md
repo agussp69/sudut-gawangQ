@@ -1,68 +1,77 @@
-## Sudut Gawang — Iterasi 1: Fondasi (Auth + DB + Shop & Detail Produk)
+## Iterasi 2 — Customer Flow End-to-End
 
-Scope iterasi pertama setelah Lovable Cloud aktif. Iterasi berikutnya: Cart → Checkout → Upload Bukti → Tracking → Profil → Admin Panel.
+Fokus: melengkapi alur pelanggan dari keranjang sampai pelacakan pesanan, plus profil & alamat. Admin panel ditunda ke iterasi 3.
 
-### 1. Aktifkan Lovable Cloud
-Provisioning otomatis: Postgres + Auth + Storage. Tidak ada konfigurasi manual.
+### 1. Keranjang (`/cart`) — protected
+- Server fn `getCart` (requireSupabaseAuth) → join `cart_items` + `products` + `product_sizes` (cek stok).
+- UI: tabel item (gambar, nama, ukuran, harga, qty stepper, hapus), ringkasan (subtotal, estimasi ongkir placeholder, total), tombol "Lanjut ke Checkout".
+- Mutasi: `updateCartItem`, `removeCartItem`, `clearCart`.
+- Badge jumlah item di Navbar (realtime via query invalidation setelah add-to-cart).
+- Empty state dengan CTA ke `/shop`.
 
-### 2. Skema Database (migration penuh, siap untuk semua iterasi)
-Bikin semua tabel sekaligus agar tidak refactor di iterasi berikutnya, tapi UI iterasi 1 hanya pakai sebagian.
+### 2. Alamat Pengiriman (`/akun/alamat`) — protected
+- CRUD `addresses` (label, penerima, telp, provinsi, kota, kecamatan, kode pos, alamat, catatan, is_default).
+- Dipakai di checkout sebagai pilihan alamat tersimpan + form alamat baru.
 
-Tabel:
-- `profiles` — id (FK auth.users), full_name, phone, avatar_url
-- `user_roles` + enum `app_role` (`admin`, `customer`) + fungsi `has_role()` (SECURITY DEFINER) — pola anti-recursion sesuai standar
-- `brands` — id, name, slug
-- `categories` — id, name, slug (Klub, Timnas, Vintage, Training Kit, Jaket, New Arrival)
-- `products` — id, sku, name, slug, brand_id, category_id, club, country, season, description, price (numeric), discount_price, condition (`new`/`vintage`), badge (`new`/`vintage`/`limited`), is_published, thumbnail_url, created_at
-- `product_images` — product_id, url, sort_order
-- `product_sizes` — product_id, size (S/M/L/XL/XXL), stock
-- `addresses` — user_id, label, recipient, phone, province, city, district, postal_code, address, notes
-- `wishlist` — user_id, product_id (unique)
-- `cart_items` — user_id, product_id, size, quantity
-- `orders` — id, order_number (unik, format `SG-YYYYMMDD-XXXXXX`), user_id, subtotal, shipping_cost, total, status (enum: `awaiting_payment`, `awaiting_verification`, `paid`, `processing`, `packed`, `shipped`, `completed`, `rejected`), courier, shipping_address (snapshot jsonb), payment_method (bank), created_at, deadline_at
-- `order_items` — order_id, product_id, size, quantity, price (snapshot), name (snapshot)
-- `payment_proofs` — order_id, file_url, uploaded_at, status, rejection_reason
-- `shipments` — order_id, courier, tracking_number, shipped_at
-- `order_status_history` — order_id, status, note, changed_by, changed_at
-- `vouchers`, `banners`, `reviews`, `notifications` — struktur dasar (dipakai iterasi lanjutan)
+### 3. Checkout (`/checkout`) — protected, multi-step
+Step 1 — Alamat: pilih alamat tersimpan / tambah baru.
+Step 2 — Pengiriman: pilih kurir (JNE Reg / J&T / SiCepat / AnterAja) + tarif flat per kurir (hard-coded di iterasi ini, gateway tarif real iterasi berikutnya).
+Step 3 — Pembayaran: pilih bank (BCA, Mandiri, BNI) — info rekening ditampilkan.
+Step 4 — Review & Place Order: ringkasan item, alamat, kurir, total. Tombol "Buat Pesanan".
 
-RLS untuk semua tabel + GRANT eksplisit ke `authenticated`/`anon`/`service_role` sesuai aturan. `products`, `product_images`, `product_sizes`, `brands`, `categories`, `banners` → SELECT publik (`anon`). Tabel milik user → kebijakan `auth.uid()`. Tabel admin-only → `has_role(auth.uid(), 'admin')`.
+Server fn `createOrder` (requireSupabaseAuth):
+- Validasi stok per item.
+- Snapshot harga & nama produk ke `order_items`.
+- Insert `orders` (status `awaiting_payment`, `deadline_at = now()+24h`, shipping_address snapshot jsonb, payment_method).
+- Kurangi stok (`product_sizes.stock`).
+- Kosongkan `cart_items` user.
+- Return `order_number`.
+- Redirect ke `/pesanan/$orderNumber`.
 
-Trigger `handle_new_user` membuat row di `profiles` otomatis saat signup. Trigger `set_order_number` mengisi `order_number` unik. Trigger `audit_order_status` mencatat ke `order_status_history`.
+### 4. Detail Pesanan & Upload Bukti (`/pesanan/$orderNumber`) — protected
+- Server fn `getOrder` (owner-only via RLS).
+- Tampilan: nomor order, status badge, countdown deadline pembayaran, ringkasan item, alamat, total, info rekening tujuan.
+- Komponen `UploadProof`: input file (jpg/png/pdf, max 2MB) → upload ke bucket `payment-proofs` (path `{user_id}/{order_id}/{timestamp}.ext`) → insert `payment_proofs` → update `orders.status = 'awaiting_verification'`.
+- Tampilkan bukti yang sudah diupload + status (pending / rejected dengan alasan / approved).
+- Timeline status visual (Menunggu Pembayaran → Verifikasi → Diproses → Dikemas → Dikirim → Selesai) dari `order_status_history`.
+- Jika `shipments` ada: tampilkan kurir + nomor resi + tombol "Lacak Resi" (link eksternal).
 
-Storage bucket: `payment-proofs` (private, RLS), `product-images` (public).
+### 5. Riwayat Pesanan (`/akun/pesanan`) — protected
+- List semua order user (terbaru dulu) dengan filter status (tab: Semua, Menunggu Bayar, Diproses, Dikirim, Selesai).
+- Card: order_number, tanggal, total, status badge, thumbnail item, CTA "Lihat Detail".
 
-Seed data: 6 brand, 6 kategori, 12 produk contoh (campur club/national/vintage) dengan gambar yang sudah ada di `src/assets/`.
+### 6. Profil (`/akun/profil`) — protected
+- Edit `full_name`, `phone`, `avatar_url` (upload ke `product-images` bucket folder `avatars/` atau bucket baru `avatars` — pakai bucket baru publik).
+- Ganti password via `supabase.auth.updateUser({ password })`.
 
-### 3. Auth (Email + Password)
-Route `src/routes/auth.tsx` — tab Login / Register, validasi Zod. `signUp` dengan `emailRedirectTo: window.location.origin`. Layout terproteksi pakai `src/routes/_authenticated/route.tsx` (managed integration). Hook `useAuth` + listener `onAuthStateChange` di `__root.tsx`. Tombol Login di Navbar → `/auth`; jika sudah login tampilkan menu profil + Logout.
+### 7. Wishlist (`/akun/wishlist`) — protected
+- List produk dari `wishlist` join `products`. Hapus item, pindah ke cart.
+- Tombol heart di ProductCard & detail produk → toggle wishlist (insert/delete).
 
-Halaman Lupa Password: `/forgot-password` dan `/reset-password` (mandatory pair).
+### 8. Layout Akun
+- Pathless route `_authenticated/akun.tsx` dengan sidebar (Profil, Alamat, Pesanan, Wishlist, Logout) + `<Outlet />`.
+- Semua route akun ada di bawah `_authenticated/`.
 
-### 4. Halaman Shop (`/shop`)
-- Data nyata dari `products` via `createServerFn` dengan publishable client (publik).
-- URL state via `validateSearch`: `q`, `category`, `brand`, `condition`, `min`, `max`, `sort`, `page`.
-- Layout: sidebar filter (Kategori, Brand, Kondisi, Range Harga) + grid produk 3–4 kolom + sort dropdown + pagination + skeleton + empty state.
-- Search bar dengan debounce → update URL.
-- Card produk: thumbnail, badge, nama, klub, harga, tombol Wishlist & Tambah ke Keranjang.
+### 9. Storage buckets (migration)
+- `payment-proofs` — private. RLS: user bisa insert/select file di folder `{auth.uid()}/`, admin bisa select semua.
+- `avatars` — public. RLS: user insert/update/delete di folder `{auth.uid()}/`.
 
-### 5. Halaman Detail Produk (`/produk/$slug`)
-- Loader fetch produk + images + sizes + related (kategori sama).
-- Layout 2 kolom: gallery (thumbnail kiri, main image dengan zoom on hover) | info (nama, klub, musim, harga, badge "Original", pilih ukuran dengan stok, qty, Wishlist, Tambah ke Keranjang, panduan ukuran via Dialog, deskripsi, info pengiriman).
-- Section Produk Terkait di bawah.
-- Breadcrumb di atas.
-- `head()` per produk (title, og:title, og:image dari thumbnail).
+### 10. Komponen pendukung
+- `OrderStatusBadge`, `OrderTimeline`, `QtyStepper`, `AddressForm`, `AddressCard`, `BankInfoCard`, `CountdownTimer`, `FileDropzone`.
+- Update Navbar: badge cart count, dropdown user dengan link Profil / Pesanan / Wishlist / Logout.
 
-### 6. Komponen pendukung
-- `Breadcrumb`, `Pagination`, `SkeletonProductCard`, `EmptyState`, `ProductFilters` (Sheet di mobile).
-- Toast pakai `sonner` (sudah ada).
-- Update `Navbar`: link Shop/Auth/Profile dinamis sesuai sesi.
+### 11. SEO & UX
+- Semua route akun: `noindex` via `head()`.
+- Toast sukses/error konsisten via `sonner`.
+- Optimistic update untuk qty cart & wishlist toggle.
+- Loading skeleton untuk semua list.
 
-### 7. SEO & Aksesibilitas
-- `head()` per route (title, description, og, canonical).
-- Single H1 per halaman, alt text di semua `<img>`, `loading="lazy"` kecuali above-the-fold.
+### Di luar scope iterasi 2 (ditunda)
+- Admin panel (Dashboard, manajemen produk/kategori/brand, verifikasi pembayaran, input resi, manajemen user, banner, voucher, laporan).
+- Voucher/diskon logic.
+- Review system.
+- Tarif kurir real-time (RajaOngkir/Biteship).
+- Notifikasi email & in-app.
+- Payment gateway.
 
-### Di luar scope iterasi 1 (akan dikerjakan setelah disetujui)
-Cart page, Wishlist page, Checkout flow, Upload bukti transfer, Tracking, Riwayat, Profil, Address book, Admin panel (Dashboard/Produk/Pesanan/Verifikasi Pembayaran/Resi/Pelanggan/Banner/Voucher/Laporan), notifikasi, voucher logic, review system.
-
-Setujui untuk saya mulai eksekusi iterasi ini?
+Setujui untuk eksekusi iterasi 2?
