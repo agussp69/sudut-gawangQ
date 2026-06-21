@@ -18,6 +18,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdukSlugRouteImport } from './routes/produk.$slug'
 import { Route as AuthenticatedCartRouteImport } from './routes/_authenticated/cart'
 import { Route as AuthenticatedAkunRouteImport } from './routes/_authenticated/akun'
+import { Route as AuthenticatedAkunProfilRouteImport } from './routes/_authenticated/akun.profil'
 
 const ShopRoute = ShopRouteImport.update({
   id: '/shop',
@@ -63,6 +64,11 @@ const AuthenticatedAkunRoute = AuthenticatedAkunRouteImport.update({
   path: '/akun',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAkunProfilRoute = AuthenticatedAkunProfilRouteImport.update({
+  id: '/profil',
+  path: '/profil',
+  getParentRoute: () => AuthenticatedAkunRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -70,9 +76,10 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/shop': typeof ShopRoute
-  '/akun': typeof AuthenticatedAkunRoute
+  '/akun': typeof AuthenticatedAkunRouteWithChildren
   '/cart': typeof AuthenticatedCartRoute
   '/produk/$slug': typeof ProdukSlugRoute
+  '/akun/profil': typeof AuthenticatedAkunProfilRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -80,9 +87,10 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/shop': typeof ShopRoute
-  '/akun': typeof AuthenticatedAkunRoute
+  '/akun': typeof AuthenticatedAkunRouteWithChildren
   '/cart': typeof AuthenticatedCartRoute
   '/produk/$slug': typeof ProdukSlugRoute
+  '/akun/profil': typeof AuthenticatedAkunProfilRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -92,9 +100,10 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/shop': typeof ShopRoute
-  '/_authenticated/akun': typeof AuthenticatedAkunRoute
+  '/_authenticated/akun': typeof AuthenticatedAkunRouteWithChildren
   '/_authenticated/cart': typeof AuthenticatedCartRoute
   '/produk/$slug': typeof ProdukSlugRoute
+  '/_authenticated/akun/profil': typeof AuthenticatedAkunProfilRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/akun'
     | '/cart'
     | '/produk/$slug'
+    | '/akun/profil'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/akun'
     | '/cart'
     | '/produk/$slug'
+    | '/akun/profil'
   id:
     | '__root__'
     | '/'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/_authenticated/akun'
     | '/_authenticated/cart'
     | '/produk/$slug'
+    | '/_authenticated/akun/profil'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -205,16 +217,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAkunRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/akun/profil': {
+      id: '/_authenticated/akun/profil'
+      path: '/profil'
+      fullPath: '/akun/profil'
+      preLoaderRoute: typeof AuthenticatedAkunProfilRouteImport
+      parentRoute: typeof AuthenticatedAkunRoute
+    }
   }
 }
 
+interface AuthenticatedAkunRouteChildren {
+  AuthenticatedAkunProfilRoute: typeof AuthenticatedAkunProfilRoute
+}
+
+const AuthenticatedAkunRouteChildren: AuthenticatedAkunRouteChildren = {
+  AuthenticatedAkunProfilRoute: AuthenticatedAkunProfilRoute,
+}
+
+const AuthenticatedAkunRouteWithChildren =
+  AuthenticatedAkunRoute._addFileChildren(AuthenticatedAkunRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAkunRoute: typeof AuthenticatedAkunRoute
+  AuthenticatedAkunRoute: typeof AuthenticatedAkunRouteWithChildren
   AuthenticatedCartRoute: typeof AuthenticatedCartRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAkunRoute: AuthenticatedAkunRoute,
+  AuthenticatedAkunRoute: AuthenticatedAkunRouteWithChildren,
   AuthenticatedCartRoute: AuthenticatedCartRoute,
 }
 
