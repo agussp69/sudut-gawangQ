@@ -19,6 +19,7 @@ import { Route as ProdukSlugRouteImport } from './routes/produk.$slug'
 import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
 import { Route as AuthenticatedCartRouteImport } from './routes/_authenticated/cart'
 import { Route as AuthenticatedAkunRouteImport } from './routes/_authenticated/akun'
+import { Route as AuthenticatedPesananOrderNumberRouteImport } from './routes/_authenticated/pesanan.$orderNumber'
 import { Route as AuthenticatedAkunProfilRouteImport } from './routes/_authenticated/akun.profil'
 import { Route as AuthenticatedAkunAlamatRouteImport } from './routes/_authenticated/akun.alamat'
 
@@ -71,6 +72,12 @@ const AuthenticatedAkunRoute = AuthenticatedAkunRouteImport.update({
   path: '/akun',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPesananOrderNumberRoute =
+  AuthenticatedPesananOrderNumberRouteImport.update({
+    id: '/pesanan/$orderNumber',
+    path: '/pesanan/$orderNumber',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAkunProfilRoute = AuthenticatedAkunProfilRouteImport.update({
   id: '/profil',
   path: '/profil',
@@ -94,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/produk/$slug': typeof ProdukSlugRoute
   '/akun/alamat': typeof AuthenticatedAkunAlamatRoute
   '/akun/profil': typeof AuthenticatedAkunProfilRoute
+  '/pesanan/$orderNumber': typeof AuthenticatedPesananOrderNumberRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -107,6 +115,7 @@ export interface FileRoutesByTo {
   '/produk/$slug': typeof ProdukSlugRoute
   '/akun/alamat': typeof AuthenticatedAkunAlamatRoute
   '/akun/profil': typeof AuthenticatedAkunProfilRoute
+  '/pesanan/$orderNumber': typeof AuthenticatedPesananOrderNumberRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -122,6 +131,7 @@ export interface FileRoutesById {
   '/produk/$slug': typeof ProdukSlugRoute
   '/_authenticated/akun/alamat': typeof AuthenticatedAkunAlamatRoute
   '/_authenticated/akun/profil': typeof AuthenticatedAkunProfilRoute
+  '/_authenticated/pesanan/$orderNumber': typeof AuthenticatedPesananOrderNumberRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/produk/$slug'
     | '/akun/alamat'
     | '/akun/profil'
+    | '/pesanan/$orderNumber'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/produk/$slug'
     | '/akun/alamat'
     | '/akun/profil'
+    | '/pesanan/$orderNumber'
   id:
     | '__root__'
     | '/'
@@ -164,6 +176,7 @@ export interface FileRouteTypes {
     | '/produk/$slug'
     | '/_authenticated/akun/alamat'
     | '/_authenticated/akun/profil'
+    | '/_authenticated/pesanan/$orderNumber'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -248,6 +261,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAkunRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/pesanan/$orderNumber': {
+      id: '/_authenticated/pesanan/$orderNumber'
+      path: '/pesanan/$orderNumber'
+      fullPath: '/pesanan/$orderNumber'
+      preLoaderRoute: typeof AuthenticatedPesananOrderNumberRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/akun/profil': {
       id: '/_authenticated/akun/profil'
       path: '/profil'
@@ -282,12 +302,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAkunRoute: typeof AuthenticatedAkunRouteWithChildren
   AuthenticatedCartRoute: typeof AuthenticatedCartRoute
   AuthenticatedCheckoutRoute: typeof AuthenticatedCheckoutRoute
+  AuthenticatedPesananOrderNumberRoute: typeof AuthenticatedPesananOrderNumberRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAkunRoute: AuthenticatedAkunRouteWithChildren,
   AuthenticatedCartRoute: AuthenticatedCartRoute,
   AuthenticatedCheckoutRoute: AuthenticatedCheckoutRoute,
+  AuthenticatedPesananOrderNumberRoute: AuthenticatedPesananOrderNumberRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
