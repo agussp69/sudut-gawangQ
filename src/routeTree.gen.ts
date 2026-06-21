@@ -21,6 +21,7 @@ import { Route as AuthenticatedCartRouteImport } from './routes/_authenticated/c
 import { Route as AuthenticatedAkunRouteImport } from './routes/_authenticated/akun'
 import { Route as AuthenticatedPesananOrderNumberRouteImport } from './routes/_authenticated/pesanan.$orderNumber'
 import { Route as AuthenticatedAkunProfilRouteImport } from './routes/_authenticated/akun.profil'
+import { Route as AuthenticatedAkunPesananRouteImport } from './routes/_authenticated/akun.pesanan'
 import { Route as AuthenticatedAkunAlamatRouteImport } from './routes/_authenticated/akun.alamat'
 
 const ShopRoute = ShopRouteImport.update({
@@ -83,6 +84,12 @@ const AuthenticatedAkunProfilRoute = AuthenticatedAkunProfilRouteImport.update({
   path: '/profil',
   getParentRoute: () => AuthenticatedAkunRoute,
 } as any)
+const AuthenticatedAkunPesananRoute =
+  AuthenticatedAkunPesananRouteImport.update({
+    id: '/pesanan',
+    path: '/pesanan',
+    getParentRoute: () => AuthenticatedAkunRoute,
+  } as any)
 const AuthenticatedAkunAlamatRoute = AuthenticatedAkunAlamatRouteImport.update({
   id: '/alamat',
   path: '/alamat',
@@ -100,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/produk/$slug': typeof ProdukSlugRoute
   '/akun/alamat': typeof AuthenticatedAkunAlamatRoute
+  '/akun/pesanan': typeof AuthenticatedAkunPesananRoute
   '/akun/profil': typeof AuthenticatedAkunProfilRoute
   '/pesanan/$orderNumber': typeof AuthenticatedPesananOrderNumberRoute
 }
@@ -114,6 +122,7 @@ export interface FileRoutesByTo {
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/produk/$slug': typeof ProdukSlugRoute
   '/akun/alamat': typeof AuthenticatedAkunAlamatRoute
+  '/akun/pesanan': typeof AuthenticatedAkunPesananRoute
   '/akun/profil': typeof AuthenticatedAkunProfilRoute
   '/pesanan/$orderNumber': typeof AuthenticatedPesananOrderNumberRoute
 }
@@ -130,6 +139,7 @@ export interface FileRoutesById {
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
   '/produk/$slug': typeof ProdukSlugRoute
   '/_authenticated/akun/alamat': typeof AuthenticatedAkunAlamatRoute
+  '/_authenticated/akun/pesanan': typeof AuthenticatedAkunPesananRoute
   '/_authenticated/akun/profil': typeof AuthenticatedAkunProfilRoute
   '/_authenticated/pesanan/$orderNumber': typeof AuthenticatedPesananOrderNumberRoute
 }
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/produk/$slug'
     | '/akun/alamat'
+    | '/akun/pesanan'
     | '/akun/profil'
     | '/pesanan/$orderNumber'
   fileRoutesByTo: FileRoutesByTo
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/produk/$slug'
     | '/akun/alamat'
+    | '/akun/pesanan'
     | '/akun/profil'
     | '/pesanan/$orderNumber'
   id:
@@ -175,6 +187,7 @@ export interface FileRouteTypes {
     | '/_authenticated/checkout'
     | '/produk/$slug'
     | '/_authenticated/akun/alamat'
+    | '/_authenticated/akun/pesanan'
     | '/_authenticated/akun/profil'
     | '/_authenticated/pesanan/$orderNumber'
   fileRoutesById: FileRoutesById
@@ -275,6 +288,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAkunProfilRouteImport
       parentRoute: typeof AuthenticatedAkunRoute
     }
+    '/_authenticated/akun/pesanan': {
+      id: '/_authenticated/akun/pesanan'
+      path: '/pesanan'
+      fullPath: '/akun/pesanan'
+      preLoaderRoute: typeof AuthenticatedAkunPesananRouteImport
+      parentRoute: typeof AuthenticatedAkunRoute
+    }
     '/_authenticated/akun/alamat': {
       id: '/_authenticated/akun/alamat'
       path: '/alamat'
@@ -287,11 +307,13 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAkunRouteChildren {
   AuthenticatedAkunAlamatRoute: typeof AuthenticatedAkunAlamatRoute
+  AuthenticatedAkunPesananRoute: typeof AuthenticatedAkunPesananRoute
   AuthenticatedAkunProfilRoute: typeof AuthenticatedAkunProfilRoute
 }
 
 const AuthenticatedAkunRouteChildren: AuthenticatedAkunRouteChildren = {
   AuthenticatedAkunAlamatRoute: AuthenticatedAkunAlamatRoute,
+  AuthenticatedAkunPesananRoute: AuthenticatedAkunPesananRoute,
   AuthenticatedAkunProfilRoute: AuthenticatedAkunProfilRoute,
 }
 
