@@ -49,17 +49,18 @@ function AddressPage() {
   });
 
   const save = useMutation({
-    mutationFn: async (vals: Partial<Address> & { id?: string }) => {
+    mutationFn: async (vals: Omit<Address, "id"> & { id?: string }) => {
       const { data: u } = await supabase.auth.getUser();
-      const payload = { ...vals, user_id: u.user!.id };
+      const userId = u.user!.id;
       if (vals.is_default) {
-        await supabase.from("addresses").update({ is_default: false }).eq("user_id", u.user!.id);
+        await supabase.from("addresses").update({ is_default: false }).eq("user_id", userId);
       }
-      if (vals.id) {
-        const { error } = await supabase.from("addresses").update(payload).eq("id", vals.id);
+      const { id, ...rest } = vals;
+      if (id) {
+        const { error } = await supabase.from("addresses").update(rest).eq("id", id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("addresses").insert(payload);
+        const { error } = await supabase.from("addresses").insert({ ...rest, user_id: userId });
         if (error) throw error;
       }
     },
