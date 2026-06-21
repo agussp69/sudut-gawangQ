@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProdukSlugRouteImport } from './routes/produk.$slug'
+import { Route as AuthenticatedCheckoutRouteImport } from './routes/_authenticated/checkout'
 import { Route as AuthenticatedCartRouteImport } from './routes/_authenticated/cart'
 import { Route as AuthenticatedAkunRouteImport } from './routes/_authenticated/akun'
 import { Route as AuthenticatedAkunProfilRouteImport } from './routes/_authenticated/akun.profil'
@@ -55,6 +56,11 @@ const ProdukSlugRoute = ProdukSlugRouteImport.update({
   path: '/produk/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedCheckoutRoute = AuthenticatedCheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCartRoute = AuthenticatedCartRouteImport.update({
   id: '/cart',
   path: '/cart',
@@ -84,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/shop': typeof ShopRoute
   '/akun': typeof AuthenticatedAkunRouteWithChildren
   '/cart': typeof AuthenticatedCartRoute
+  '/checkout': typeof AuthenticatedCheckoutRoute
   '/produk/$slug': typeof ProdukSlugRoute
   '/akun/alamat': typeof AuthenticatedAkunAlamatRoute
   '/akun/profil': typeof AuthenticatedAkunProfilRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByTo {
   '/shop': typeof ShopRoute
   '/akun': typeof AuthenticatedAkunRouteWithChildren
   '/cart': typeof AuthenticatedCartRoute
+  '/checkout': typeof AuthenticatedCheckoutRoute
   '/produk/$slug': typeof ProdukSlugRoute
   '/akun/alamat': typeof AuthenticatedAkunAlamatRoute
   '/akun/profil': typeof AuthenticatedAkunProfilRoute
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   '/shop': typeof ShopRoute
   '/_authenticated/akun': typeof AuthenticatedAkunRouteWithChildren
   '/_authenticated/cart': typeof AuthenticatedCartRoute
+  '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
   '/produk/$slug': typeof ProdukSlugRoute
   '/_authenticated/akun/alamat': typeof AuthenticatedAkunAlamatRoute
   '/_authenticated/akun/profil': typeof AuthenticatedAkunProfilRoute
@@ -124,6 +133,7 @@ export interface FileRouteTypes {
     | '/shop'
     | '/akun'
     | '/cart'
+    | '/checkout'
     | '/produk/$slug'
     | '/akun/alamat'
     | '/akun/profil'
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
     | '/shop'
     | '/akun'
     | '/cart'
+    | '/checkout'
     | '/produk/$slug'
     | '/akun/alamat'
     | '/akun/profil'
@@ -149,6 +160,7 @@ export interface FileRouteTypes {
     | '/shop'
     | '/_authenticated/akun'
     | '/_authenticated/cart'
+    | '/_authenticated/checkout'
     | '/produk/$slug'
     | '/_authenticated/akun/alamat'
     | '/_authenticated/akun/profil'
@@ -215,6 +227,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProdukSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/checkout': {
+      id: '/_authenticated/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof AuthenticatedCheckoutRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/cart': {
       id: '/_authenticated/cart'
       path: '/cart'
@@ -262,11 +281,13 @@ const AuthenticatedAkunRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAkunRoute: typeof AuthenticatedAkunRouteWithChildren
   AuthenticatedCartRoute: typeof AuthenticatedCartRoute
+  AuthenticatedCheckoutRoute: typeof AuthenticatedCheckoutRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAkunRoute: AuthenticatedAkunRouteWithChildren,
   AuthenticatedCartRoute: AuthenticatedCartRoute,
+  AuthenticatedCheckoutRoute: AuthenticatedCheckoutRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
