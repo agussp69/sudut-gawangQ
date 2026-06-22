@@ -105,7 +105,7 @@ function OrderDetail() {
   if (q.isLoading) return <><Navbar /><div className="container-x py-10"><Skeleton className="h-96" /></div></>;
   if (!q.data) return null;
 
-  const { order, items, history, proofs, shipment } = q.data;
+  const { order, items, history, proofs, shipment, reviewedSet } = q.data;
   const bank = BANKS.find((b) => b.name === order.payment_method);
   const addr = order.shipping_address as { recipient?: string; phone?: string; address?: string; city?: string; province?: string; postal_code?: string } | null;
   const latestProof = proofs[0];
