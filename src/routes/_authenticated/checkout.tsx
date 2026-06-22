@@ -270,7 +270,7 @@ function CheckoutPage() {
                 </div>
                 <div className="border rounded-lg p-4 text-sm">
                   <div>Kurir: <span className="font-medium">{courier.name}</span> ({formatIDR(courier.cost)})</div>
-                  <div>Bank: <span className="font-medium">{bank.name}</span></div>
+                  <div>Pembayaran: <span className="font-medium">{paymentMode === "online" ? "Midtrans (Online)" : `Transfer ${bank.name}`}</span></div>
                 </div>
                 <div className="border rounded-lg divide-y">
                   {items.map((it) => (
