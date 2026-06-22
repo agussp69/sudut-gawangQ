@@ -24,7 +24,7 @@ type Initial = {
   description?: string | null;
   price?: number;
   discount_price?: number | null;
-  condition?: "new" | "used" | "vintage";
+  condition?: "new" | "vintage";
   thumbnail_url?: string | null;
   is_published?: boolean;
   product_sizes?: Size[];
@@ -173,7 +173,6 @@ export function ProductForm({ initial, onSaved }: { initial?: Initial; onSaved?:
             onChange={(e) => setCondition(e.target.value as any)}
           >
             <option value="new">Baru</option>
-            <option value="used">Bekas</option>
             <option value="vintage">Vintage</option>
           </select>
         </div>
