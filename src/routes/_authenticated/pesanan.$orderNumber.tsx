@@ -107,7 +107,8 @@ function OrderDetail() {
   if (!q.data) return null;
 
   const { order, items, history, proofs, shipment, reviewedSet } = q.data;
-  const bank = BANKS.find((b) => b.name === order.payment_method);
+  const isMidtrans = order.payment_gateway === "midtrans" || order.payment_method === "Midtrans";
+  const bank = !isMidtrans ? BANKS.find((b) => b.name === order.payment_method) : null;
   const addr = order.shipping_address as { recipient?: string; phone?: string; address?: string; city?: string; province?: string; postal_code?: string } | null;
   const latestProof = proofs[0];
 
