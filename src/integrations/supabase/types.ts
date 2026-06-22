@@ -713,6 +713,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_cancel_order: {
+        Args: { p_order_id: string; p_reason: string }
+        Returns: undefined
+      }
+      admin_mark_delivered: { Args: { p_order_id: string }; Returns: undefined }
+      admin_reject_payment: {
+        Args: { p_order_id: string; p_proof_id: string; p_reason: string }
+        Returns: undefined
+      }
+      admin_ship_order: {
+        Args: { p_courier: string; p_order_id: string; p_tracking: string }
+        Returns: undefined
+      }
+      admin_verify_payment: {
+        Args: { p_order_id: string; p_proof_id: string }
+        Returns: undefined
+      }
+      claim_admin_role: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

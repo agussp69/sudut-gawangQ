@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Heart, ShoppingBag, User, Menu, X, LogOut, Package, MapPin } from "lucide-react";
+import { Search, Heart, ShoppingBag, User, Menu, X, LogOut, Package, MapPin, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useIsAdmin } from "@/hooks/use-admin";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -26,6 +27,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const { user } = useAuth();
+  const { data: isAdmin } = useIsAdmin();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -109,6 +111,12 @@ export function Navbar() {
                 <DropdownMenuItem asChild><Link to="/akun/pesanan"><Package className="h-4 w-4 mr-2" />Pesanan</Link></DropdownMenuItem>
                 <DropdownMenuItem asChild><Link to="/akun/alamat"><MapPin className="h-4 w-4 mr-2" />Alamat</Link></DropdownMenuItem>
                 <DropdownMenuItem asChild><Link to="/akun/wishlist"><Heart className="h-4 w-4 mr-2" />Wishlist</Link></DropdownMenuItem>
+                {isAdmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild><Link to="/admin"><ShieldCheck className="h-4 w-4 mr-2" />Admin Panel</Link></DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut}>
                   <LogOut className="h-4 w-4 mr-2" /> Keluar
