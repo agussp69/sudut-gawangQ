@@ -4,7 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   resolve: {
-    tsConfigPaths: true,
+    tsconfigPaths: true,
   },
   plugins: [
     tanstackStart({

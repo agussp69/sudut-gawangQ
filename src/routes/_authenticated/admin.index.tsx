@@ -83,7 +83,7 @@ function AdminDashboard() {
             <Link
               key={o.id}
               to="/admin/pesanan/$orderNumber"
-              params={{ orderNumber: o.order_number }}
+              params={{ orderNumber: o.order_number ?? "" }}
               className="flex items-center justify-between py-3 hover:bg-muted/40 px-2 -mx-2 rounded transition-colors"
             >
               <div>
