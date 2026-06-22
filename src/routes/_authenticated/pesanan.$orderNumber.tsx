@@ -188,16 +188,28 @@ function OrderDetail() {
             <div className="border rounded-lg p-5">
               <h2 className="font-semibold text-forest mb-3">Item</h2>
               <div className="divide-y">
-                {items.map((it) => (
-                  <div key={it.id} className="flex gap-3 py-3">
-                    <img src={resolveProductImage(it.thumbnail_url)} alt="" className="h-14 w-14 object-cover rounded" />
-                    <div className="flex-1 text-sm">
-                      <div className="font-medium">{it.name}</div>
-                      <div className="text-xs text-muted-foreground">Ukuran {it.size} • {it.quantity} pcs</div>
+                {items.map((it) => {
+                  const canReview = order.status === "completed" && it.product_id && !reviewedSet.has(it.product_id);
+                  return (
+                    <div key={it.id} className="flex gap-3 py-3 items-center">
+                      <img src={resolveProductImage(it.thumbnail_url)} alt="" className="h-14 w-14 object-cover rounded" />
+                      <div className="flex-1 text-sm">
+                        <div className="font-medium">{it.name}</div>
+                        <div className="text-xs text-muted-foreground">Ukuran {it.size} • {it.quantity} pcs</div>
+                        {canReview && (
+                          <ReviewButton
+                            productId={it.product_id!}
+                            onDone={() => qc.invalidateQueries({ queryKey: ["order", orderNumber] })}
+                          />
+                        )}
+                        {order.status === "completed" && it.product_id && reviewedSet.has(it.product_id) && (
+                          <div className="text-xs text-grass mt-1">✓ Sudah diulas</div>
+                        )}
+                      </div>
+                      <div className="text-sm font-semibold">{formatIDR(Number(it.price) * it.quantity)}</div>
                     </div>
-                    <div className="text-sm font-semibold">{formatIDR(Number(it.price) * it.quantity)}</div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
