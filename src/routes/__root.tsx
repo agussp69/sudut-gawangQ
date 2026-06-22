@@ -10,7 +10,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
+import { reportError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -18,16 +18,16 @@ function NotFoundComponent() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">Halaman tidak ditemukan</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+          Halaman yang Anda cari tidak ada atau sudah dipindahkan.
         </p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Go home
+            Kembali ke Beranda
           </Link>
         </div>
       </div>
@@ -39,17 +39,17 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    reportError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+          Halaman tidak bisa dimuat
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+          Terjadi kesalahan pada sistem kami. Coba muat ulang halaman atau kembali ke beranda.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -59,13 +59,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             }}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Try again
+            Coba Lagi
           </button>
           <a
             href="/"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Go home
+            Kembali ke Beranda
           </a>
         </div>
       </div>
@@ -81,14 +81,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "Sudut Gawang" },
       { name: "twitter:card", content: "summary_large_image" },
-      { title: "Lovable App" },
-      { property: "og:title", content: "Lovable App" },
-      { name: "twitter:title", content: "Lovable App" },
-      { name: "description", content: "Sudut Gawang is a premium e-commerce landing page for original football jerseys." },
-      { property: "og:description", content: "Sudut Gawang is a premium e-commerce landing page for original football jerseys." },
-      { name: "twitter:description", content: "Sudut Gawang is a premium e-commerce landing page for original football jerseys." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e5a179ac-1108-44e0-a145-b6637ea8e7ef/id-preview-d070306e--aa6b6d78-955d-482a-aad2-22b2a4bb7bf6.lovable.app-1781942598162.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e5a179ac-1108-44e0-a145-b6637ea8e7ef/id-preview-d070306e--aa6b6d78-955d-482a-aad2-22b2a4bb7bf6.lovable.app-1781942598162.png" },
+      { title: "Sudut Gawang — Jersey Sepak Bola Original" },
+      { property: "og:title", content: "Sudut Gawang — Jersey Sepak Bola Original" },
+      { name: "twitter:title", content: "Sudut Gawang — Jersey Sepak Bola Original" },
+      { name: "description", content: "Toko jersey sepak bola original: koleksi klub, tim nasional, dan vintage dengan dokumentasi lengkap dan pengiriman ke seluruh Indonesia." },
+      { property: "og:description", content: "Toko jersey sepak bola original: koleksi klub, tim nasional, dan vintage dengan dokumentasi lengkap dan pengiriman ke seluruh Indonesia." },
+      { name: "twitter:description", content: "Toko jersey sepak bola original: koleksi klub, tim nasional, dan vintage dengan dokumentasi lengkap dan pengiriman ke seluruh Indonesia." },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -108,7 +106,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="id">
       <head>
         <HeadContent />
       </head>
