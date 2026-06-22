@@ -135,30 +135,49 @@ function OrderDetail() {
                 {countdown && (
                   <p className="text-sm text-amber-900 mb-3">Sisa waktu: <span className="font-bold tabular-nums">{countdown}</span></p>
                 )}
-                {bank && (
-                  <div className="bg-white border rounded-md p-4">
-                    <div className="text-xs text-muted-foreground">Transfer ke</div>
-                    <div className="font-semibold text-forest">{bank.name}</div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <code className="text-lg font-mono">{bank.account}</code>
-                      <button onClick={() => { navigator.clipboard.writeText(bank.account); toast.success("Disalin"); }} className="text-grass hover:text-forest">
-                        <Copy className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <div className="text-xs text-muted-foreground">a.n. {bank.holder}</div>
-                    <div className="mt-3 pt-3 border-t flex justify-between">
-                      <span className="text-sm">Jumlah Transfer</span>
+                {isMidtrans ? (
+                  <>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Anda memilih pembayaran online. Klik tombol di bawah untuk membuka halaman pembayaran (QRIS, VA, e-Wallet, atau Kartu Kredit).
+                    </p>
+                    <div className="bg-white border rounded-md p-4 mb-3 flex justify-between">
+                      <span className="text-sm">Jumlah Pembayaran</span>
                       <span className="font-bold text-forest">{formatIDR(Number(order.total))}</span>
                     </div>
-                  </div>
+                    <MidtransPaymentButton
+                      orderNumber={order.order_number}
+                      className="w-full"
+                      onPaid={() => qc.invalidateQueries({ queryKey: ["order", orderNumber] })}
+                    />
+                  </>
+                ) : (
+                  <>
+                    {bank && (
+                      <div className="bg-white border rounded-md p-4">
+                        <div className="text-xs text-muted-foreground">Transfer ke</div>
+                        <div className="font-semibold text-forest">{bank.name}</div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <code className="text-lg font-mono">{bank.account}</code>
+                          <button onClick={() => { navigator.clipboard.writeText(bank.account); toast.success("Disalin"); }} className="text-grass hover:text-forest">
+                            <Copy className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <div className="text-xs text-muted-foreground">a.n. {bank.holder}</div>
+                        <div className="mt-3 pt-3 border-t flex justify-between">
+                          <span className="text-sm">Jumlah Transfer</span>
+                          <span className="font-bold text-forest">{formatIDR(Number(order.total))}</span>
+                        </div>
+                      </div>
+                    )}
+                    <div className="mt-4">
+                      <input ref={fileRef} type="file" accept="image/*,application/pdf" onChange={onUpload} className="hidden" />
+                      <Button onClick={() => fileRef.current?.click()} disabled={uploading} className="w-full">
+                        {uploading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                        Unggah Bukti Transfer
+                      </Button>
+                    </div>
+                  </>
                 )}
-                <div className="mt-4">
-                  <input ref={fileRef} type="file" accept="image/*,application/pdf" onChange={onUpload} className="hidden" />
-                  <Button onClick={() => fileRef.current?.click()} disabled={uploading} className="w-full">
-                    {uploading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
-                    Unggah Bukti Transfer
-                  </Button>
-                </div>
               </div>
             )}
 
