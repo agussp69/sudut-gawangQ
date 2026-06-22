@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { CheckCheck } from "lucide-react";
@@ -13,6 +15,7 @@ export const Route = createFileRoute("/_authenticated/akun/notifikasi")({
 function NotifPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const q = useQuery({
     queryKey: ["notifications-full"],
     queryFn: async () => {
@@ -24,6 +27,24 @@ function NotifPage() {
       return data ?? [];
     },
   });
+
+  useEffect(() => {
+    if (!user) return;
+    const ch = supabase
+      .channel(`notif-page-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ["notifications-full"] });
+          qc.invalidateQueries({ queryKey: ["notifications", user.id] });
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [user, qc]);
 
   async function markAll() {
     const { data: u } = await supabase.auth.getUser();
