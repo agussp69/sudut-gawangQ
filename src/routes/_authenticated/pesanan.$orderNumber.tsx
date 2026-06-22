@@ -16,6 +16,7 @@ import { BANKS } from "@/lib/shipping";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { RatingStars } from "@/components/account/RatingStars";
+import { MidtransPaymentButton } from "@/components/checkout/MidtransPaymentButton";
 
 export const Route = createFileRoute("/_authenticated/pesanan/$orderNumber")({
   head: ({ params }) => ({
