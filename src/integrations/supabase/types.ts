@@ -299,6 +299,7 @@ export type Database = {
           courier: string | null
           created_at: string
           deadline_at: string | null
+          discount_amount: number
           id: string
           notes: string | null
           order_number: string | null
@@ -310,11 +311,14 @@ export type Database = {
           total: number
           updated_at: string
           user_id: string
+          voucher_code: string | null
+          voucher_id: string | null
         }
         Insert: {
           courier?: string | null
           created_at?: string
           deadline_at?: string | null
+          discount_amount?: number
           id?: string
           notes?: string | null
           order_number?: string | null
@@ -326,11 +330,14 @@ export type Database = {
           total?: number
           updated_at?: string
           user_id: string
+          voucher_code?: string | null
+          voucher_id?: string | null
         }
         Update: {
           courier?: string | null
           created_at?: string
           deadline_at?: string | null
+          discount_amount?: number
           id?: string
           notes?: string | null
           order_number?: string | null
@@ -342,8 +349,18 @@ export type Database = {
           total?: number
           updated_at?: string
           user_id?: string
+          voucher_code?: string | null
+          voucher_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_voucher_id_fkey"
+            columns: ["voucher_id"]
+            isOneToOne: false
+            referencedRelation: "vouchers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_proofs: {
         Row: {
@@ -553,6 +570,7 @@ export type Database = {
           id: string
           product_id: string
           rating: number
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -561,6 +579,7 @@ export type Database = {
           id?: string
           product_id: string
           rating: number
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -569,6 +588,7 @@ export type Database = {
           id?: string
           product_id?: string
           rating?: number
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -730,6 +750,14 @@ export type Database = {
         Args: { p_order_id: string; p_proof_id: string }
         Returns: undefined
       }
+      apply_voucher: {
+        Args: { p_code: string; p_subtotal: number }
+        Returns: {
+          code: string
+          discount: number
+          voucher_id: string
+        }[]
+      }
       claim_admin_role: { Args: never; Returns: undefined }
       has_role: {
         Args: {
@@ -738,19 +766,34 @@ export type Database = {
         }
         Returns: boolean
       }
-      place_order: {
-        Args: {
-          p_courier: string
-          p_notes?: string
-          p_payment_method: string
-          p_shipping_address: Json
-          p_shipping_cost: number
-        }
-        Returns: {
-          order_id: string
-          order_number: string
-        }[]
-      }
+      place_order:
+        | {
+            Args: {
+              p_courier: string
+              p_notes?: string
+              p_payment_method: string
+              p_shipping_address: Json
+              p_shipping_cost: number
+            }
+            Returns: {
+              order_id: string
+              order_number: string
+            }[]
+          }
+        | {
+            Args: {
+              p_courier: string
+              p_notes?: string
+              p_payment_method: string
+              p_shipping_address: Json
+              p_shipping_cost: number
+              p_voucher_code?: string
+            }
+            Returns: {
+              order_id: string
+              order_number: string
+            }[]
+          }
       submit_payment_proof: {
         Args: { p_file_url: string; p_order_id: string }
         Returns: undefined
