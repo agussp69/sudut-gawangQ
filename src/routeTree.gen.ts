@@ -25,11 +25,15 @@ import { Route as AuthenticatedPesananOrderNumberRouteImport } from './routes/_a
 import { Route as AuthenticatedAkunWishlistRouteImport } from './routes/_authenticated/akun.wishlist'
 import { Route as AuthenticatedAkunProfilRouteImport } from './routes/_authenticated/akun.profil'
 import { Route as AuthenticatedAkunPesananRouteImport } from './routes/_authenticated/akun.pesanan'
+import { Route as AuthenticatedAkunNotifikasiRouteImport } from './routes/_authenticated/akun.notifikasi'
 import { Route as AuthenticatedAkunAlamatRouteImport } from './routes/_authenticated/akun.alamat'
+import { Route as AuthenticatedAdminVoucherRouteImport } from './routes/_authenticated/admin.voucher'
+import { Route as AuthenticatedAdminUlasanRouteImport } from './routes/_authenticated/admin.ulasan'
 import { Route as AuthenticatedAdminProdukRouteImport } from './routes/_authenticated/admin.produk'
 import { Route as AuthenticatedAdminPesananRouteImport } from './routes/_authenticated/admin.pesanan'
 import { Route as AuthenticatedAdminPenggunaRouteImport } from './routes/_authenticated/admin.pengguna'
 import { Route as AuthenticatedAdminClaimRouteImport } from './routes/_authenticated/admin.claim'
+import { Route as AuthenticatedAdminBannerRouteImport } from './routes/_authenticated/admin.banner'
 import { Route as AuthenticatedAdminProdukBaruRouteImport } from './routes/_authenticated/admin.produk.baru'
 import { Route as AuthenticatedAdminProdukIdRouteImport } from './routes/_authenticated/admin.produk.$id'
 import { Route as AuthenticatedAdminPesananOrderNumberRouteImport } from './routes/_authenticated/admin.pesanan.$orderNumber'
@@ -116,11 +120,29 @@ const AuthenticatedAkunPesananRoute =
     path: '/pesanan',
     getParentRoute: () => AuthenticatedAkunRoute,
   } as any)
+const AuthenticatedAkunNotifikasiRoute =
+  AuthenticatedAkunNotifikasiRouteImport.update({
+    id: '/notifikasi',
+    path: '/notifikasi',
+    getParentRoute: () => AuthenticatedAkunRoute,
+  } as any)
 const AuthenticatedAkunAlamatRoute = AuthenticatedAkunAlamatRouteImport.update({
   id: '/alamat',
   path: '/alamat',
   getParentRoute: () => AuthenticatedAkunRoute,
 } as any)
+const AuthenticatedAdminVoucherRoute =
+  AuthenticatedAdminVoucherRouteImport.update({
+    id: '/voucher',
+    path: '/voucher',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminUlasanRoute =
+  AuthenticatedAdminUlasanRouteImport.update({
+    id: '/ulasan',
+    path: '/ulasan',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminProdukRoute =
   AuthenticatedAdminProdukRouteImport.update({
     id: '/produk',
@@ -144,6 +166,12 @@ const AuthenticatedAdminClaimRoute = AuthenticatedAdminClaimRouteImport.update({
   path: '/claim',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminBannerRoute =
+  AuthenticatedAdminBannerRouteImport.update({
+    id: '/banner',
+    path: '/banner',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminProdukBaruRoute =
   AuthenticatedAdminProdukBaruRouteImport.update({
     id: '/baru',
@@ -174,11 +202,15 @@ export interface FileRoutesByFullPath {
   '/cart': typeof AuthenticatedCartRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/produk/$slug': typeof ProdukSlugRoute
+  '/admin/banner': typeof AuthenticatedAdminBannerRoute
   '/admin/claim': typeof AuthenticatedAdminClaimRoute
   '/admin/pengguna': typeof AuthenticatedAdminPenggunaRoute
   '/admin/pesanan': typeof AuthenticatedAdminPesananRouteWithChildren
   '/admin/produk': typeof AuthenticatedAdminProdukRouteWithChildren
+  '/admin/ulasan': typeof AuthenticatedAdminUlasanRoute
+  '/admin/voucher': typeof AuthenticatedAdminVoucherRoute
   '/akun/alamat': typeof AuthenticatedAkunAlamatRoute
+  '/akun/notifikasi': typeof AuthenticatedAkunNotifikasiRoute
   '/akun/pesanan': typeof AuthenticatedAkunPesananRoute
   '/akun/profil': typeof AuthenticatedAkunProfilRoute
   '/akun/wishlist': typeof AuthenticatedAkunWishlistRoute
@@ -198,11 +230,15 @@ export interface FileRoutesByTo {
   '/cart': typeof AuthenticatedCartRoute
   '/checkout': typeof AuthenticatedCheckoutRoute
   '/produk/$slug': typeof ProdukSlugRoute
+  '/admin/banner': typeof AuthenticatedAdminBannerRoute
   '/admin/claim': typeof AuthenticatedAdminClaimRoute
   '/admin/pengguna': typeof AuthenticatedAdminPenggunaRoute
   '/admin/pesanan': typeof AuthenticatedAdminPesananRouteWithChildren
   '/admin/produk': typeof AuthenticatedAdminProdukRouteWithChildren
+  '/admin/ulasan': typeof AuthenticatedAdminUlasanRoute
+  '/admin/voucher': typeof AuthenticatedAdminVoucherRoute
   '/akun/alamat': typeof AuthenticatedAkunAlamatRoute
+  '/akun/notifikasi': typeof AuthenticatedAkunNotifikasiRoute
   '/akun/pesanan': typeof AuthenticatedAkunPesananRoute
   '/akun/profil': typeof AuthenticatedAkunProfilRoute
   '/akun/wishlist': typeof AuthenticatedAkunWishlistRoute
@@ -225,11 +261,15 @@ export interface FileRoutesById {
   '/_authenticated/cart': typeof AuthenticatedCartRoute
   '/_authenticated/checkout': typeof AuthenticatedCheckoutRoute
   '/produk/$slug': typeof ProdukSlugRoute
+  '/_authenticated/admin/banner': typeof AuthenticatedAdminBannerRoute
   '/_authenticated/admin/claim': typeof AuthenticatedAdminClaimRoute
   '/_authenticated/admin/pengguna': typeof AuthenticatedAdminPenggunaRoute
   '/_authenticated/admin/pesanan': typeof AuthenticatedAdminPesananRouteWithChildren
   '/_authenticated/admin/produk': typeof AuthenticatedAdminProdukRouteWithChildren
+  '/_authenticated/admin/ulasan': typeof AuthenticatedAdminUlasanRoute
+  '/_authenticated/admin/voucher': typeof AuthenticatedAdminVoucherRoute
   '/_authenticated/akun/alamat': typeof AuthenticatedAkunAlamatRoute
+  '/_authenticated/akun/notifikasi': typeof AuthenticatedAkunNotifikasiRoute
   '/_authenticated/akun/pesanan': typeof AuthenticatedAkunPesananRoute
   '/_authenticated/akun/profil': typeof AuthenticatedAkunProfilRoute
   '/_authenticated/akun/wishlist': typeof AuthenticatedAkunWishlistRoute
@@ -252,11 +292,15 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/produk/$slug'
+    | '/admin/banner'
     | '/admin/claim'
     | '/admin/pengguna'
     | '/admin/pesanan'
     | '/admin/produk'
+    | '/admin/ulasan'
+    | '/admin/voucher'
     | '/akun/alamat'
+    | '/akun/notifikasi'
     | '/akun/pesanan'
     | '/akun/profil'
     | '/akun/wishlist'
@@ -276,11 +320,15 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/produk/$slug'
+    | '/admin/banner'
     | '/admin/claim'
     | '/admin/pengguna'
     | '/admin/pesanan'
     | '/admin/produk'
+    | '/admin/ulasan'
+    | '/admin/voucher'
     | '/akun/alamat'
+    | '/akun/notifikasi'
     | '/akun/pesanan'
     | '/akun/profil'
     | '/akun/wishlist'
@@ -302,11 +350,15 @@ export interface FileRouteTypes {
     | '/_authenticated/cart'
     | '/_authenticated/checkout'
     | '/produk/$slug'
+    | '/_authenticated/admin/banner'
     | '/_authenticated/admin/claim'
     | '/_authenticated/admin/pengguna'
     | '/_authenticated/admin/pesanan'
     | '/_authenticated/admin/produk'
+    | '/_authenticated/admin/ulasan'
+    | '/_authenticated/admin/voucher'
     | '/_authenticated/akun/alamat'
+    | '/_authenticated/akun/notifikasi'
     | '/_authenticated/akun/pesanan'
     | '/_authenticated/akun/profil'
     | '/_authenticated/akun/wishlist'
@@ -441,12 +493,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAkunPesananRouteImport
       parentRoute: typeof AuthenticatedAkunRoute
     }
+    '/_authenticated/akun/notifikasi': {
+      id: '/_authenticated/akun/notifikasi'
+      path: '/notifikasi'
+      fullPath: '/akun/notifikasi'
+      preLoaderRoute: typeof AuthenticatedAkunNotifikasiRouteImport
+      parentRoute: typeof AuthenticatedAkunRoute
+    }
     '/_authenticated/akun/alamat': {
       id: '/_authenticated/akun/alamat'
       path: '/alamat'
       fullPath: '/akun/alamat'
       preLoaderRoute: typeof AuthenticatedAkunAlamatRouteImport
       parentRoute: typeof AuthenticatedAkunRoute
+    }
+    '/_authenticated/admin/voucher': {
+      id: '/_authenticated/admin/voucher'
+      path: '/voucher'
+      fullPath: '/admin/voucher'
+      preLoaderRoute: typeof AuthenticatedAdminVoucherRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/ulasan': {
+      id: '/_authenticated/admin/ulasan'
+      path: '/ulasan'
+      fullPath: '/admin/ulasan'
+      preLoaderRoute: typeof AuthenticatedAdminUlasanRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/produk': {
       id: '/_authenticated/admin/produk'
@@ -474,6 +547,13 @@ declare module '@tanstack/react-router' {
       path: '/claim'
       fullPath: '/admin/claim'
       preLoaderRoute: typeof AuthenticatedAdminClaimRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/banner': {
+      id: '/_authenticated/admin/banner'
+      path: '/banner'
+      fullPath: '/admin/banner'
+      preLoaderRoute: typeof AuthenticatedAdminBannerRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/produk/baru': {
@@ -532,18 +612,24 @@ const AuthenticatedAdminProdukRouteWithChildren =
   )
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminBannerRoute: typeof AuthenticatedAdminBannerRoute
   AuthenticatedAdminClaimRoute: typeof AuthenticatedAdminClaimRoute
   AuthenticatedAdminPenggunaRoute: typeof AuthenticatedAdminPenggunaRoute
   AuthenticatedAdminPesananRoute: typeof AuthenticatedAdminPesananRouteWithChildren
   AuthenticatedAdminProdukRoute: typeof AuthenticatedAdminProdukRouteWithChildren
+  AuthenticatedAdminUlasanRoute: typeof AuthenticatedAdminUlasanRoute
+  AuthenticatedAdminVoucherRoute: typeof AuthenticatedAdminVoucherRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminBannerRoute: AuthenticatedAdminBannerRoute,
   AuthenticatedAdminClaimRoute: AuthenticatedAdminClaimRoute,
   AuthenticatedAdminPenggunaRoute: AuthenticatedAdminPenggunaRoute,
   AuthenticatedAdminPesananRoute: AuthenticatedAdminPesananRouteWithChildren,
   AuthenticatedAdminProdukRoute: AuthenticatedAdminProdukRouteWithChildren,
+  AuthenticatedAdminUlasanRoute: AuthenticatedAdminUlasanRoute,
+  AuthenticatedAdminVoucherRoute: AuthenticatedAdminVoucherRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
@@ -552,6 +638,7 @@ const AuthenticatedAdminRouteWithChildren =
 
 interface AuthenticatedAkunRouteChildren {
   AuthenticatedAkunAlamatRoute: typeof AuthenticatedAkunAlamatRoute
+  AuthenticatedAkunNotifikasiRoute: typeof AuthenticatedAkunNotifikasiRoute
   AuthenticatedAkunPesananRoute: typeof AuthenticatedAkunPesananRoute
   AuthenticatedAkunProfilRoute: typeof AuthenticatedAkunProfilRoute
   AuthenticatedAkunWishlistRoute: typeof AuthenticatedAkunWishlistRoute
@@ -559,6 +646,7 @@ interface AuthenticatedAkunRouteChildren {
 
 const AuthenticatedAkunRouteChildren: AuthenticatedAkunRouteChildren = {
   AuthenticatedAkunAlamatRoute: AuthenticatedAkunAlamatRoute,
+  AuthenticatedAkunNotifikasiRoute: AuthenticatedAkunNotifikasiRoute,
   AuthenticatedAkunPesananRoute: AuthenticatedAkunPesananRoute,
   AuthenticatedAkunProfilRoute: AuthenticatedAkunProfilRoute,
   AuthenticatedAkunWishlistRoute: AuthenticatedAkunWishlistRoute,
@@ -598,13 +686,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

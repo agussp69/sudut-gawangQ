@@ -1,77 +1,64 @@
-## Iterasi 2 — Customer Flow End-to-End
+# Iterasi 4 — Voucher, Review, Banner & Notifikasi
 
-Fokus: melengkapi alur pelanggan dari keranjang sampai pelacakan pesanan, plus profil & alamat. Admin panel ditunda ke iterasi 3.
+Fokus: melengkapi fitur pendukung yang sudah punya tabel di DB (`vouchers`, `reviews`, `banners`, `notifications`) tapi belum punya UI. Payment gateway & email tetap ditunda.
 
-### 1. Keranjang (`/cart`) — protected
-- Server fn `getCart` (requireSupabaseAuth) → join `cart_items` + `products` + `product_sizes` (cek stok).
-- UI: tabel item (gambar, nama, ukuran, harga, qty stepper, hapus), ringkasan (subtotal, estimasi ongkir placeholder, total), tombol "Lanjut ke Checkout".
-- Mutasi: `updateCartItem`, `removeCartItem`, `clearCart`.
-- Badge jumlah item di Navbar (realtime via query invalidation setelah add-to-cart).
-- Empty state dengan CTA ke `/shop`.
+## 1. Voucher / Diskon
 
-### 2. Alamat Pengiriman (`/akun/alamat`) — protected
-- CRUD `addresses` (label, penerima, telp, provinsi, kota, kecamatan, kode pos, alamat, catatan, is_default).
-- Dipakai di checkout sebagai pilihan alamat tersimpan + form alamat baru.
+**Admin (`/admin/voucher`)**
+- List voucher (code, type, value, min order, usage limit, valid period, active).
+- Form create/edit: kode, tipe (`percent` / `fixed`), nilai, min belanja, max diskon, kuota, periode mulai/akhir, status aktif.
+- Aksi: aktif/nonaktif & hapus.
 
-### 3. Checkout (`/checkout`) — protected, multi-step
-Step 1 — Alamat: pilih alamat tersimpan / tambah baru.
-Step 2 — Pengiriman: pilih kurir (JNE Reg / J&T / SiCepat / AnterAja) + tarif flat per kurir (hard-coded di iterasi ini, gateway tarif real iterasi berikutnya).
-Step 3 — Pembayaran: pilih bank (BCA, Mandiri, BNI) — info rekening ditampilkan.
-Step 4 — Review & Place Order: ringkasan item, alamat, kurir, total. Tombol "Buat Pesanan".
+**Customer (checkout)**
+- Field "Kode Voucher" di step Review checkout, tombol "Terapkan".
+- RPC baru `apply_voucher(p_code, p_subtotal)` → return `{ voucher_id, discount }` atau error (kadaluarsa / min belanja / kuota habis).
+- Tampilkan baris "Diskon" di ringkasan; total = subtotal + ongkir − diskon.
 
-Server fn `createOrder` (requireSupabaseAuth):
-- Validasi stok per item.
-- Snapshot harga & nama produk ke `order_items`.
-- Insert `orders` (status `awaiting_payment`, `deadline_at = now()+24h`, shipping_address snapshot jsonb, payment_method).
-- Kurangi stok (`product_sizes.stock`).
-- Kosongkan `cart_items` user.
-- Return `order_number`.
-- Redirect ke `/pesanan/$orderNumber`.
+**RPC `place_order` (revisi)**
+- Tambah param `p_voucher_code text` (opsional).
+- Validasi & lock voucher (`FOR UPDATE`), hitung diskon, simpan `voucher_id` + `discount_amount` ke `orders`, increment `used_count`.
 
-### 4. Detail Pesanan & Upload Bukti (`/pesanan/$orderNumber`) — protected
-- Server fn `getOrder` (owner-only via RLS).
-- Tampilan: nomor order, status badge, countdown deadline pembayaran, ringkasan item, alamat, total, info rekening tujuan.
-- Komponen `UploadProof`: input file (jpg/png/pdf, max 2MB) → upload ke bucket `payment-proofs` (path `{user_id}/{order_id}/{timestamp}.ext`) → insert `payment_proofs` → update `orders.status = 'awaiting_verification'`.
-- Tampilkan bukti yang sudah diupload + status (pending / rejected dengan alasan / approved).
-- Timeline status visual (Menunggu Pembayaran → Verifikasi → Diproses → Dikemas → Dikirim → Selesai) dari `order_status_history`.
-- Jika `shipments` ada: tampilkan kurir + nomor resi + tombol "Lacak Resi" (link eksternal).
+**Skema tambahan (jika belum ada)**
+- Kolom `voucher_id`, `discount_amount` di `orders` — cek dulu, tambahkan via migration kalau belum ada.
 
-### 5. Riwayat Pesanan (`/akun/pesanan`) — protected
-- List semua order user (terbaru dulu) dengan filter status (tab: Semua, Menunggu Bayar, Diproses, Dikirim, Selesai).
-- Card: order_number, tanggal, total, status badge, thumbnail item, CTA "Lihat Detail".
+## 2. Review Produk
 
-### 6. Profil (`/akun/profil`) — protected
-- Edit `full_name`, `phone`, `avatar_url` (upload ke `product-images` bucket folder `avatars/` atau bucket baru `avatars` — pakai bucket baru publik).
-- Ganti password via `supabase.auth.updateUser({ password })`.
+**Customer**
+- Di `/pesanan/$orderNumber` saat status `completed`: tombol "Beri Ulasan" per `order_item` yang belum di-review.
+- Modal: rating 1–5 + komentar → insert `reviews` (RLS: user hanya boleh review produk dari order miliknya yang `completed`).
+- Di `/produk/$slug`: tab/section "Ulasan" — list review (nama, avatar, rating, tanggal, komentar), rata-rata rating + total review di header produk.
 
-### 7. Wishlist (`/akun/wishlist`) — protected
-- List produk dari `wishlist` join `products`. Hapus item, pindah ke cart.
-- Tombol heart di ProductCard & detail produk → toggle wishlist (insert/delete).
+**Admin (`/admin/ulasan`)**
+- List semua review, filter rating, tombol hapus (moderasi).
 
-### 8. Layout Akun
-- Pathless route `_authenticated/akun.tsx` dengan sidebar (Profil, Alamat, Pesanan, Wishlist, Logout) + `<Outlet />`.
-- Semua route akun ada di bawah `_authenticated/`.
+## 3. Banner Manager
 
-### 9. Storage buckets (migration)
-- `payment-proofs` — private. RLS: user bisa insert/select file di folder `{auth.uid()}/`, admin bisa select semua.
-- `avatars` — public. RLS: user insert/update/delete di folder `{auth.uid()}/`.
+**Admin (`/admin/banner`)**
+- CRUD banner (image_url, title, subtitle, link, position, sort_order, is_active, period).
+- Preview banner saat edit.
 
-### 10. Komponen pendukung
-- `OrderStatusBadge`, `OrderTimeline`, `QtyStepper`, `AddressForm`, `AddressCard`, `BankInfoCard`, `CountdownTimer`, `FileDropzone`.
-- Update Navbar: badge cart count, dropdown user dengan link Profil / Pesanan / Wishlist / Logout.
+**Public**
+- `Hero` / section landing membaca banner aktif dari DB (server fn publik via publishable client + policy SELECT anon untuk `banners` aktif).
+- Fallback ke hero statis jika kosong.
 
-### 11. SEO & UX
-- Semua route akun: `noindex` via `head()`.
-- Toast sukses/error konsisten via `sonner`.
-- Optimistic update untuk qty cart & wishlist toggle.
-- Loading skeleton untuk semua list.
+## 4. Notifikasi In-App
 
-### Di luar scope iterasi 2 (ditunda)
-- Admin panel (Dashboard, manajemen produk/kategori/brand, verifikasi pembayaran, input resi, manajemen user, banner, voucher, laporan).
-- Voucher/diskon logic.
-- Review system.
-- Tarif kurir real-time (RajaOngkir/Biteship).
-- Notifikasi email & in-app.
-- Payment gateway.
+**Trigger (DB)**
+- Trigger di `orders` (AFTER UPDATE OF status) → insert `notifications` untuk pemilik order dengan title + message sesuai status (pembayaran diverifikasi, dikirim + resi, selesai, ditolak, dibatalkan).
+- Trigger di `payment_proofs` (AFTER INSERT) → insert notifikasi ke semua admin (loop `user_roles` role=admin) "Bukti pembayaran baru".
 
-Setujui untuk eksekusi iterasi 2?
+**UI**
+- Bell icon di Navbar dengan badge unread count (realtime via Supabase channel ke `notifications` user).
+- Dropdown: 10 notifikasi terbaru, klik → mark read + navigate ke link tujuan, tombol "Tandai semua dibaca".
+- Halaman `/akun/notifikasi`: list lengkap, pagination sederhana.
+
+## 5. Komponen pendukung
+- `VoucherInput`, `RatingStars`, `ReviewList`, `ReviewForm`, `BannerForm`, `NotificationBell`, `NotificationItem`.
+
+## Di luar scope (ditunda)
+- Payment gateway (Midtrans/Xendit).
+- Notifikasi email & WhatsApp.
+- Tarif kurir real-time.
+- Dashboard analitik lanjutan (grafik penjualan).
+
+Setujui untuk eksekusi iterasi 4? Atau mau prioritaskan salah satu saja (misal hanya Voucher + Review)?

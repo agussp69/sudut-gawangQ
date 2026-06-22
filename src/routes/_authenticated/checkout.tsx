@@ -13,6 +13,7 @@ import { Plus, Loader2, MapPin, Truck, CreditCard, Check } from "lucide-react";
 import { toast } from "sonner";
 import { COURIERS, BANKS } from "@/lib/shipping";
 import { formatIDR, resolveProductImage } from "@/lib/product-assets";
+import { VoucherInput, type AppliedVoucher } from "@/components/account/VoucherInput";
 import { AddressForm } from "./akun.alamat";
 
 export const Route = createFileRoute("/_authenticated/checkout")({
@@ -30,6 +31,7 @@ function CheckoutPage() {
   const [courierId, setCourierId] = useState<string>(COURIERS[0].id);
   const [bankId, setBankId] = useState<string>(BANKS[0].id);
   const [openAddr, setOpenAddr] = useState(false);
+  const [voucher, setVoucher] = useState<AppliedVoucher | null>(null);
 
   const cartQ = useQuery({
     queryKey: ["cart"],
@@ -75,7 +77,8 @@ function CheckoutPage() {
     (s, it) => s + Number(it.product?.discount_price ?? it.product?.price ?? 0) * it.quantity,
     0,
   );
-  const total = subtotal + courier.cost;
+  const discount = voucher?.discount ?? 0;
+  const total = Math.max(0, subtotal + courier.cost - discount);
   const selectedAddress = addrQ.data?.find((a) => a.id === addressId);
 
   const placeOrder = useMutation({
@@ -86,7 +89,8 @@ function CheckoutPage() {
         p_courier: courier.name,
         p_shipping_cost: courier.cost,
         p_payment_method: bank.name,
-      });
+        ...(voucher?.code ? { p_voucher_code: voucher.code } : {}),
+      } as never);
       if (error) throw error;
       return data?.[0];
     },
@@ -272,6 +276,17 @@ function CheckoutPage() {
             <h2 className="font-semibold text-forest mb-2">Ringkasan</h2>
             <div className="flex justify-between"><span className="text-muted-foreground">Subtotal ({items.length} item)</span><span>{formatIDR(subtotal)}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Ongkir</span><span>{formatIDR(courier.cost)}</span></div>
+            {discount > 0 && (
+              <div className="flex justify-between text-grass"><span>Diskon ({voucher?.code})</span><span>-{formatIDR(discount)}</span></div>
+            )}
+            <div className="pt-2">
+              <VoucherInput
+                subtotal={subtotal}
+                applied={voucher}
+                onApply={setVoucher}
+                onClear={() => setVoucher(null)}
+              />
+            </div>
             <div className="border-t pt-3 flex justify-between text-base">
               <span className="font-semibold text-forest">Total</span>
               <span className="font-bold text-forest">{formatIDR(total)}</span>

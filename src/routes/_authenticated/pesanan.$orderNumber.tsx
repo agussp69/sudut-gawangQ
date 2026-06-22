@@ -9,10 +9,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { OrderStatusBadge } from "@/components/account/OrderStatusBadge";
 import { OrderTimeline } from "@/components/account/OrderTimeline";
-import { Upload, Copy, Truck, Loader2 } from "lucide-react";
+import { Upload, Copy, Truck, Loader2, Star } from "lucide-react";
 import { toast } from "sonner";
 import { formatIDR, resolveProductImage } from "@/lib/product-assets";
 import { BANKS } from "@/lib/shipping";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { RatingStars } from "@/components/account/RatingStars";
 
 export const Route = createFileRoute("/_authenticated/pesanan/$orderNumber")({
   head: ({ params }) => ({
@@ -53,18 +56,21 @@ function OrderDetail() {
         .maybeSingle();
       if (error) throw error;
       if (!order) throw notFound();
-      const [items, history, proofs, shipment] = await Promise.all([
+      const [items, history, proofs, shipment, myReviews] = await Promise.all([
         supabase.from("order_items").select("*").eq("order_id", order.id),
         supabase.from("order_status_history").select("*").eq("order_id", order.id).order("changed_at"),
         supabase.from("payment_proofs").select("*").eq("order_id", order.id).order("uploaded_at", { ascending: false }),
         supabase.from("shipments").select("*").eq("order_id", order.id).maybeSingle(),
+        supabase.from("reviews").select("product_id").eq("user_id", order.user_id),
       ]);
+      const reviewedSet = new Set((myReviews.data ?? []).map((r) => r.product_id));
       return {
         order,
         items: items.data ?? [],
         history: history.data ?? [],
         proofs: proofs.data ?? [],
         shipment: shipment.data,
+        reviewedSet,
       };
     },
   });
@@ -99,7 +105,7 @@ function OrderDetail() {
   if (q.isLoading) return <><Navbar /><div className="container-x py-10"><Skeleton className="h-96" /></div></>;
   if (!q.data) return null;
 
-  const { order, items, history, proofs, shipment } = q.data;
+  const { order, items, history, proofs, shipment, reviewedSet } = q.data;
   const bank = BANKS.find((b) => b.name === order.payment_method);
   const addr = order.shipping_address as { recipient?: string; phone?: string; address?: string; city?: string; province?: string; postal_code?: string } | null;
   const latestProof = proofs[0];
@@ -182,16 +188,28 @@ function OrderDetail() {
             <div className="border rounded-lg p-5">
               <h2 className="font-semibold text-forest mb-3">Item</h2>
               <div className="divide-y">
-                {items.map((it) => (
-                  <div key={it.id} className="flex gap-3 py-3">
-                    <img src={resolveProductImage(it.thumbnail_url)} alt="" className="h-14 w-14 object-cover rounded" />
-                    <div className="flex-1 text-sm">
-                      <div className="font-medium">{it.name}</div>
-                      <div className="text-xs text-muted-foreground">Ukuran {it.size} • {it.quantity} pcs</div>
+                {items.map((it) => {
+                  const canReview = order.status === "completed" && it.product_id && !reviewedSet.has(it.product_id);
+                  return (
+                    <div key={it.id} className="flex gap-3 py-3 items-center">
+                      <img src={resolveProductImage(it.thumbnail_url)} alt="" className="h-14 w-14 object-cover rounded" />
+                      <div className="flex-1 text-sm">
+                        <div className="font-medium">{it.name}</div>
+                        <div className="text-xs text-muted-foreground">Ukuran {it.size} • {it.quantity} pcs</div>
+                        {canReview && (
+                          <ReviewButton
+                            productId={it.product_id!}
+                            onDone={() => qc.invalidateQueries({ queryKey: ["order", orderNumber] })}
+                          />
+                        )}
+                        {order.status === "completed" && it.product_id && reviewedSet.has(it.product_id) && (
+                          <div className="text-xs text-grass mt-1">✓ Sudah diulas</div>
+                        )}
+                      </div>
+                      <div className="text-sm font-semibold">{formatIDR(Number(it.price) * it.quantity)}</div>
                     </div>
-                    <div className="text-sm font-semibold">{formatIDR(Number(it.price) * it.quantity)}</div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -224,6 +242,56 @@ function OrderDetail() {
         </div>
       </main>
       <Footer />
+    </>
+  );
+}
+
+function ReviewButton({ productId, onDone }: { productId: string; onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function submit() {
+    setSaving(true);
+    const { data: u } = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from("reviews")
+      .insert({ user_id: u.user!.id, product_id: productId, rating, comment: comment || null });
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Ulasan dikirim. Terima kasih!");
+    setOpen(false);
+    onDone();
+  }
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="inline-flex items-center gap-1 text-xs text-grass hover:underline mt-1"
+      >
+        <Star className="h-3 w-3" /> Beri Ulasan
+      </button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Beri Ulasan</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <div className="text-sm font-medium mb-2">Rating</div>
+              <RatingStars value={rating} size={28} onChange={setRating} />
+            </div>
+            <div>
+              <div className="text-sm font-medium mb-2">Komentar (opsional)</div>
+              <Textarea rows={4} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Bagaimana pengalaman Anda dengan produk ini?" />
+            </div>
+            <Button onClick={submit} disabled={saving} className="w-full">
+              {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              Kirim Ulasan
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

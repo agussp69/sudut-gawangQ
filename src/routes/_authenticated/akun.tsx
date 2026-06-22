@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
-import { User, MapPin, Package, Heart, LogOut } from "lucide-react";
+import { User, MapPin, Package, Heart, Bell, LogOut } from "lucide-react";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,6 +16,7 @@ const NAV = [
   { to: "/akun/alamat", label: "Alamat", icon: MapPin },
   { to: "/akun/pesanan", label: "Pesanan", icon: Package },
   { to: "/akun/wishlist", label: "Wishlist", icon: Heart },
+  { to: "/akun/notifikasi", label: "Notifikasi", icon: Bell },
 ] as const;
 
 function AccountLayout() {
