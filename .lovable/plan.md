@@ -1,64 +1,69 @@
-# Iterasi 4 — Voucher, Review, Banner & Notifikasi
+# Iterasi 5 — Payment Gateway & Email Notifikasi
 
-Fokus: melengkapi fitur pendukung yang sudah punya tabel di DB (`vouchers`, `reviews`, `banners`, `notifications`) tapi belum punya UI. Payment gateway & email tetap ditunda.
+Fokus: otomatisasi pembayaran (tanpa upload bukti manual) + email transaksional supaya customer tidak perlu refresh aplikasi untuk tahu status pesanan.
 
-## 1. Voucher / Diskon
+## 1. Payment Gateway — Midtrans Snap
 
-**Admin (`/admin/voucher`)**
-- List voucher (code, type, value, min order, usage limit, valid period, active).
-- Form create/edit: kode, tipe (`percent` / `fixed`), nilai, min belanja, max diskon, kuota, periode mulai/akhir, status aktif.
-- Aksi: aktif/nonaktif & hapus.
+Dipilih Midtrans (bukan Xendit) karena: dukungan QRIS/VA/e-wallet lengkap untuk pasar ID, Snap.js drop-in checkout (cepat diintegrasikan), sandbox gratis untuk testing.
 
-**Customer (checkout)**
-- Field "Kode Voucher" di step Review checkout, tombol "Terapkan".
-- RPC baru `apply_voucher(p_code, p_subtotal)` → return `{ voucher_id, discount }` atau error (kadaluarsa / min belanja / kuota habis).
-- Tampilkan baris "Diskon" di ringkasan; total = subtotal + ongkir − diskon.
+**Alur baru di checkout:**
+1. User pilih metode "Pembayaran Online (Midtrans)" → tetap pakai `place_order` (status awal `awaiting_payment`).
+2. Server fn `create_midtrans_transaction(order_id)` memanggil Midtrans Snap API → balikin `snap_token` + `redirect_url`.
+3. Frontend buka `window.snap.pay(token, { onSuccess, onPending, onError, onClose })`.
+4. Webhook publik `/api/public/midtrans/notification` terima status dari Midtrans → verifikasi signature SHA512 → update `orders.status` (`processing` / `awaiting_payment` / `cancelled`) via `supabaseAdmin`.
 
-**RPC `place_order` (revisi)**
-- Tambah param `p_voucher_code text` (opsional).
-- Validasi & lock voucher (`FOR UPDATE`), hitung diskon, simpan `voucher_id` + `discount_amount` ke `orders`, increment `used_count`.
+**Metode pembayaran manual (transfer bank + upload bukti) tetap dipertahankan** sebagai opsi alternatif — user pilih di checkout.
 
-**Skema tambahan (jika belum ada)**
-- Kolom `voucher_id`, `discount_amount` di `orders` — cek dulu, tambahkan via migration kalau belum ada.
+**Perubahan DB (1 migration):**
+- Tambah kolom `orders.payment_gateway` (text), `orders.gateway_order_id` (text, unik), `orders.gateway_transaction_id`, `orders.gateway_payment_type`, `orders.gateway_status_raw` (jsonb), `orders.paid_at` (timestamptz).
+- RPC `admin_force_sync_payment(p_order_id)` untuk admin yang mau manual re-check (opsional).
 
-## 2. Review Produk
+**Secrets yang diminta ke user:**
+- `MIDTRANS_SERVER_KEY` (sandbox dulu)
+- `MIDTRANS_CLIENT_KEY` (publishable, boleh di-env `VITE_`)
+- `MIDTRANS_IS_PRODUCTION` ("false" untuk sandbox)
 
-**Customer**
-- Di `/pesanan/$orderNumber` saat status `completed`: tombol "Beri Ulasan" per `order_item` yang belum di-review.
-- Modal: rating 1–5 + komentar → insert `reviews` (RLS: user hanya boleh review produk dari order miliknya yang `completed`).
-- Di `/produk/$slug`: tab/section "Ulasan" — list review (nama, avatar, rating, tanggal, komentar), rata-rata rating + total review di header produk.
+**File baru:**
+- `src/lib/midtrans.functions.ts` — server fn `createSnapTransaction` (protected, `requireSupabaseAuth`).
+- `src/routes/api/public/midtrans.notification.ts` — webhook (verifikasi signature, no auth, no PII di response).
+- `src/components/checkout/MidtransPaymentButton.tsx` — load Snap.js dari CDN sesuai mode sandbox/production.
+- Edit `src/routes/_authenticated/checkout.tsx` — tambah opsi metode "Online Payment".
+- Edit `src/routes/_authenticated/pesanan.$orderNumber.tsx` — kalau order pakai gateway & belum paid, tampilkan tombol "Bayar Sekarang" (re-open Snap).
 
-**Admin (`/admin/ulasan`)**
-- List semua review, filter rating, tombol hapus (moderasi).
+## 2. Email Notifikasi (Lovable Emails)
 
-## 3. Banner Manager
+Tujuan: email otomatis untuk event penting agar customer tidak harus buka app.
 
-**Admin (`/admin/banner`)**
-- CRUD banner (image_url, title, subtitle, link, position, sort_order, is_active, period).
-- Preview banner saat edit.
+**Event yang dikirim:**
+- Order confirmed (status → `processing` / `paid`).
+- Order shipped (status → `shipped`, include resi + courier).
+- Order completed.
+- Payment proof rejected (status balik ke `awaiting_payment`).
 
-**Public**
-- `Hero` / section landing membaca banner aktif dari DB (server fn publik via publishable client + policy SELECT anon untuk `banners` aktif).
-- Fallback ke hero statis jika kosong.
+**Mekanisme:**
+- DB trigger `email_on_order_status_change` AFTER UPDATE pada `orders` → panggil `pg_net` HTTP ke server route `/api/public/email/order-status` dengan signature HMAC (`EMAIL_HOOK_SECRET`).
+- Server route render React Email template via `@react-email/components`, enqueue ke `auth_emails`/`transactional_emails` pakai `enqueue_email` RPC (sudah di-setup oleh `email_domain--setup_email_infra`).
 
-## 4. Notifikasi In-App
+**Prasyarat (akan dijalankan di awal iterasi):**
+- `email_domain--check_email_domain_status` → kalau belum ada, tampilkan dialog setup domain ke user.
+- `email_domain--setup_email_infra` setelah domain siap.
 
-**Trigger (DB)**
-- Trigger di `orders` (AFTER UPDATE OF status) → insert `notifications` untuk pemilik order dengan title + message sesuai status (pembayaran diverifikasi, dikirim + resi, selesai, ditolak, dibatalkan).
-- Trigger di `payment_proofs` (AFTER INSERT) → insert notifikasi ke semua admin (loop `user_roles` role=admin) "Bukti pembayaran baru".
+**File baru:**
+- `src/emails/OrderStatusEmail.tsx` — React Email template.
+- `src/routes/api/public/email.order-status.ts` — HMAC-verified enqueue endpoint.
+- Migration untuk trigger + secret `EMAIL_HOOK_SECRET`.
 
-**UI**
-- Bell icon di Navbar dengan badge unread count (realtime via Supabase channel ke `notifications` user).
-- Dropdown: 10 notifikasi terbaru, klik → mark read + navigate ke link tujuan, tombol "Tandai semua dibaca".
-- Halaman `/akun/notifikasi`: list lengkap, pagination sederhana.
+**User-facing setting:** `profiles.email_notifications_enabled` (boolean default true) + toggle di `/akun/profil`.
 
-## 5. Komponen pendukung
-- `VoucherInput`, `RatingStars`, `ReviewList`, `ReviewForm`, `BannerForm`, `NotificationBell`, `NotificationItem`.
+## Out of scope (tunda iterasi berikutnya)
+- WhatsApp notifikasi (butuh provider berbayar seperti Fonnte/Wablas).
+- Real-time courier rates (RajaOngkir API).
+- Recurring subscription / membership.
+- Refund otomatis via Midtrans.
 
-## Di luar scope (ditunda)
-- Payment gateway (Midtrans/Xendit).
-- Notifikasi email & WhatsApp.
-- Tarif kurir real-time.
-- Dashboard analitik lanjutan (grafik penjualan).
+## Yang dibutuhkan dari user sebelum mulai
+1. Konfirmasi pilih Midtrans (bukan Xendit/Stripe).
+2. Akun Midtrans sandbox sudah dibuat di https://dashboard.sandbox.midtrans.com → siap kasih Server Key + Client Key.
+3. Domain email (kalau belum) — saya akan munculkan dialog setup.
 
-Setujui untuk eksekusi iterasi 4? Atau mau prioritaskan salah satu saja (misal hanya Voucher + Review)?
+Setelah disetujui, urutan eksekusi: (1) setup email domain → (2) migration DB → (3) minta secret Midtrans → (4) implementasi server fn + webhook → (5) UI checkout + button bayar → (6) email templates + trigger.
