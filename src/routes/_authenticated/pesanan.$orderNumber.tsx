@@ -245,3 +245,53 @@ function OrderDetail() {
     </>
   );
 }
+
+function ReviewButton({ productId, onDone }: { productId: string; onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function submit() {
+    setSaving(true);
+    const { data: u } = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from("reviews")
+      .insert({ user_id: u.user!.id, product_id: productId, rating, comment: comment || null });
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Ulasan dikirim. Terima kasih!");
+    setOpen(false);
+    onDone();
+  }
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="inline-flex items-center gap-1 text-xs text-grass hover:underline mt-1"
+      >
+        <Star className="h-3 w-3" /> Beri Ulasan
+      </button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Beri Ulasan</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <div className="text-sm font-medium mb-2">Rating</div>
+              <RatingStars value={rating} size={28} onChange={setRating} />
+            </div>
+            <div>
+              <div className="text-sm font-medium mb-2">Komentar (opsional)</div>
+              <Textarea rows={4} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Bagaimana pengalaman Anda dengan produk ini?" />
+            </div>
+            <Button onClick={submit} disabled={saving} className="w-full">
+              {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              Kirim Ulasan
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
