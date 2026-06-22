@@ -9,10 +9,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { OrderStatusBadge } from "@/components/account/OrderStatusBadge";
 import { OrderTimeline } from "@/components/account/OrderTimeline";
-import { Upload, Copy, Truck, Loader2 } from "lucide-react";
+import { Upload, Copy, Truck, Loader2, Star } from "lucide-react";
 import { toast } from "sonner";
 import { formatIDR, resolveProductImage } from "@/lib/product-assets";
 import { BANKS } from "@/lib/shipping";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { RatingStars } from "@/components/account/RatingStars";
 
 export const Route = createFileRoute("/_authenticated/pesanan/$orderNumber")({
   head: ({ params }) => ({
@@ -53,18 +56,21 @@ function OrderDetail() {
         .maybeSingle();
       if (error) throw error;
       if (!order) throw notFound();
-      const [items, history, proofs, shipment] = await Promise.all([
+      const [items, history, proofs, shipment, myReviews] = await Promise.all([
         supabase.from("order_items").select("*").eq("order_id", order.id),
         supabase.from("order_status_history").select("*").eq("order_id", order.id).order("changed_at"),
         supabase.from("payment_proofs").select("*").eq("order_id", order.id).order("uploaded_at", { ascending: false }),
         supabase.from("shipments").select("*").eq("order_id", order.id).maybeSingle(),
+        supabase.from("reviews").select("product_id").eq("user_id", order.user_id),
       ]);
+      const reviewedSet = new Set((myReviews.data ?? []).map((r) => r.product_id));
       return {
         order,
         items: items.data ?? [],
         history: history.data ?? [],
         proofs: proofs.data ?? [],
         shipment: shipment.data,
+        reviewedSet,
       };
     },
   });
