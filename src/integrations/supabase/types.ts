@@ -300,9 +300,15 @@ export type Database = {
           created_at: string
           deadline_at: string | null
           discount_amount: number
+          gateway_order_id: string | null
+          gateway_payment_type: string | null
+          gateway_status_raw: Json | null
+          gateway_transaction_id: string | null
           id: string
           notes: string | null
           order_number: string | null
+          paid_at: string | null
+          payment_gateway: string | null
           payment_method: string | null
           shipping_address: Json | null
           shipping_cost: number
@@ -319,9 +325,15 @@ export type Database = {
           created_at?: string
           deadline_at?: string | null
           discount_amount?: number
+          gateway_order_id?: string | null
+          gateway_payment_type?: string | null
+          gateway_status_raw?: Json | null
+          gateway_transaction_id?: string | null
           id?: string
           notes?: string | null
           order_number?: string | null
+          paid_at?: string | null
+          payment_gateway?: string | null
           payment_method?: string | null
           shipping_address?: Json | null
           shipping_cost?: number
@@ -338,9 +350,15 @@ export type Database = {
           created_at?: string
           deadline_at?: string | null
           discount_amount?: number
+          gateway_order_id?: string | null
+          gateway_payment_type?: string | null
+          gateway_status_raw?: Json | null
+          gateway_transaction_id?: string | null
           id?: string
           notes?: string | null
           order_number?: string | null
+          paid_at?: string | null
+          payment_gateway?: string | null
           payment_method?: string | null
           shipping_address?: Json | null
           shipping_cost?: number
