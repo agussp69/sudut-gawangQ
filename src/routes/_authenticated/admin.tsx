@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Package, ShoppingBag, Users, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Users, ShieldCheck, Tag, Star, Image as ImageIcon } from "lucide-react";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
 import { useIsAdmin } from "@/hooks/use-admin";
@@ -19,6 +19,9 @@ const NAV = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/admin/pesanan", label: "Pesanan", icon: ShoppingBag, exact: false },
   { to: "/admin/produk", label: "Produk", icon: Package, exact: false },
+  { to: "/admin/voucher", label: "Voucher", icon: Tag, exact: false },
+  { to: "/admin/banner", label: "Banner", icon: ImageIcon, exact: false },
+  { to: "/admin/ulasan", label: "Ulasan", icon: Star, exact: false },
   { to: "/admin/pengguna", label: "Pengguna", icon: Users, exact: false },
 ] as const;
 

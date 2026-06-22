@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useIsAdmin } from "@/hooks/use-admin";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { NotificationBell } from "@/components/account/NotificationBell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -99,6 +100,7 @@ export function Navbar() {
             )}
           </Link>
 
+          {user && <NotificationBell />}
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger className="p-2 hover:text-grass transition-colors">
