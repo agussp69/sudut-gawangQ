@@ -342,7 +342,17 @@ function ProductDetail() {
                         loading="lazy"
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
-          </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-3">{p.club}</p>
+                    <h3 className="text-sm font-semibold text-forest mt-1 line-clamp-1 group-hover:text-grass">
+                      {p.name}
+                    </h3>
+                    <p className="text-sm font-bold mt-1">{formatIDR(p.price)}</p>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Reviews */}
           <section className="mt-20 pt-10 border-t">
@@ -378,17 +388,6 @@ function ProductDetail() {
               </div>
             )}
           </section>
-
-                    <p className="text-xs text-muted-foreground mt-3">{p.club}</p>
-                    <h3 className="text-sm font-semibold text-forest mt-1 line-clamp-1 group-hover:text-grass">
-                      {p.name}
-                    </h3>
-                    <p className="text-sm font-bold mt-1">{formatIDR(p.price)}</p>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
         </div>
       </main>
       <Footer />
