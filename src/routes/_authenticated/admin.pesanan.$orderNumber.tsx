@@ -37,9 +37,9 @@ function AdminOrderDetail() {
         .select(
           `id, order_number, status, subtotal, shipping_cost, total, courier, payment_method, shipping_address, notes, deadline_at, created_at, user_id,
            order_items(id, name, size, quantity, price, thumbnail_url),
-           payment_proofs(id, file_url, status, rejection_reason, created_at),
+           payment_proofs(id, file_url, status, rejection_reason, uploaded_at),
            shipments(id, courier, tracking_number, shipped_at, delivered_at),
-           order_status_history(id, status, note, created_at),
+           order_status_history(id, status, note, changed_at),
            profiles:profiles!orders_user_id_fkey(full_name, phone)`
         )
         .eq("order_number", orderNumber)
@@ -49,8 +49,8 @@ function AdminOrderDetail() {
     },
   });
 
-  const latestProof = (order.data?.payment_proofs ?? []).slice().sort(
-    (a: any, b: any) => +new Date(b.created_at) - +new Date(a.created_at),
+  const latestProof: any = ((order.data as any)?.payment_proofs ?? []).slice().sort(
+    (a: any, b: any) => +new Date(b.uploaded_at) - +new Date(a.uploaded_at),
   )[0];
 
   async function viewProof() {
@@ -274,7 +274,7 @@ function AdminOrderDetail() {
 
           <Card className="p-5">
             <h2 className="font-semibold text-forest mb-3">Timeline</h2>
-            <OrderTimeline history={o.order_status_history} />
+            <OrderTimeline history={o.order_status_history} currentStatus={o.status} />
           </Card>
         </div>
 
