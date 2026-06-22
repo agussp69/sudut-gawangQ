@@ -34,6 +34,7 @@ import { Route as AuthenticatedAdminPesananRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminPenggunaRouteImport } from './routes/_authenticated/admin.pengguna'
 import { Route as AuthenticatedAdminClaimRouteImport } from './routes/_authenticated/admin.claim'
 import { Route as AuthenticatedAdminBannerRouteImport } from './routes/_authenticated/admin.banner'
+import { Route as ApiPublicMidtransNotificationRouteImport } from './routes/api/public/midtrans.notification'
 import { Route as AuthenticatedAdminProdukBaruRouteImport } from './routes/_authenticated/admin.produk.baru'
 import { Route as AuthenticatedAdminProdukIdRouteImport } from './routes/_authenticated/admin.produk.$id'
 import { Route as AuthenticatedAdminPesananOrderNumberRouteImport } from './routes/_authenticated/admin.pesanan.$orderNumber'
@@ -172,6 +173,12 @@ const AuthenticatedAdminBannerRoute =
     path: '/banner',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const ApiPublicMidtransNotificationRoute =
+  ApiPublicMidtransNotificationRouteImport.update({
+    id: '/api/public/midtrans/notification',
+    path: '/api/public/midtrans/notification',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAdminProdukBaruRoute =
   AuthenticatedAdminProdukBaruRouteImport.update({
     id: '/baru',
@@ -219,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/admin/pesanan/$orderNumber': typeof AuthenticatedAdminPesananOrderNumberRoute
   '/admin/produk/$id': typeof AuthenticatedAdminProdukIdRoute
   '/admin/produk/baru': typeof AuthenticatedAdminProdukBaruRoute
+  '/api/public/midtrans/notification': typeof ApiPublicMidtransNotificationRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -247,6 +255,7 @@ export interface FileRoutesByTo {
   '/admin/pesanan/$orderNumber': typeof AuthenticatedAdminPesananOrderNumberRoute
   '/admin/produk/$id': typeof AuthenticatedAdminProdukIdRoute
   '/admin/produk/baru': typeof AuthenticatedAdminProdukBaruRoute
+  '/api/public/midtrans/notification': typeof ApiPublicMidtransNotificationRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -278,6 +287,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/pesanan/$orderNumber': typeof AuthenticatedAdminPesananOrderNumberRoute
   '/_authenticated/admin/produk/$id': typeof AuthenticatedAdminProdukIdRoute
   '/_authenticated/admin/produk/baru': typeof AuthenticatedAdminProdukBaruRoute
+  '/api/public/midtrans/notification': typeof ApiPublicMidtransNotificationRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -309,6 +319,7 @@ export interface FileRouteTypes {
     | '/admin/pesanan/$orderNumber'
     | '/admin/produk/$id'
     | '/admin/produk/baru'
+    | '/api/public/midtrans/notification'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -337,6 +348,7 @@ export interface FileRouteTypes {
     | '/admin/pesanan/$orderNumber'
     | '/admin/produk/$id'
     | '/admin/produk/baru'
+    | '/api/public/midtrans/notification'
   id:
     | '__root__'
     | '/'
@@ -367,6 +379,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/pesanan/$orderNumber'
     | '/_authenticated/admin/produk/$id'
     | '/_authenticated/admin/produk/baru'
+    | '/api/public/midtrans/notification'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -377,6 +390,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   ShopRoute: typeof ShopRoute
   ProdukSlugRoute: typeof ProdukSlugRoute
+  ApiPublicMidtransNotificationRoute: typeof ApiPublicMidtransNotificationRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -556,6 +570,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminBannerRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/api/public/midtrans/notification': {
+      id: '/api/public/midtrans/notification'
+      path: '/api/public/midtrans/notification'
+      fullPath: '/api/public/midtrans/notification'
+      preLoaderRoute: typeof ApiPublicMidtransNotificationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/produk/baru': {
       id: '/_authenticated/admin/produk/baru'
       path: '/baru'
@@ -682,6 +703,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   ShopRoute: ShopRoute,
   ProdukSlugRoute: ProdukSlugRoute,
+  ApiPublicMidtransNotificationRoute: ApiPublicMidtransNotificationRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

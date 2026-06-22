@@ -29,6 +29,7 @@ function CheckoutPage() {
   const [step, setStep] = useState(0);
   const [addressId, setAddressId] = useState<string | null>(null);
   const [courierId, setCourierId] = useState<string>(COURIERS[0].id);
+  const [paymentMode, setPaymentMode] = useState<"online" | "transfer">("online");
   const [bankId, setBankId] = useState<string>(BANKS[0].id);
   const [openAddr, setOpenAddr] = useState(false);
   const [voucher, setVoucher] = useState<AppliedVoucher | null>(null);
@@ -84,11 +85,12 @@ function CheckoutPage() {
   const placeOrder = useMutation({
     mutationFn: async () => {
       if (!selectedAddress) throw new Error("Pilih alamat terlebih dahulu");
+      const paymentLabel = paymentMode === "online" ? "Midtrans" : bank.name;
       const { data, error } = await supabase.rpc("place_order", {
         p_shipping_address: selectedAddress as unknown as never,
         p_courier: courier.name,
         p_shipping_cost: courier.cost,
-        p_payment_method: bank.name,
+        p_payment_method: paymentLabel,
         ...(voucher?.code ? { p_voucher_code: voucher.code } : {}),
       } as never);
       if (error) throw error;
@@ -218,18 +220,38 @@ function CheckoutPage() {
                 <h2 className="text-lg font-semibold text-forest flex items-center gap-2">
                   <CreditCard className="h-5 w-5" /> Metode Pembayaran
                 </h2>
-                <p className="text-sm text-muted-foreground">Transfer manual — Anda akan diberikan info rekening setelah pesanan dibuat.</p>
-                <RadioGroup value={bankId} onValueChange={setBankId} className="space-y-2">
-                  {BANKS.map((b) => (
-                    <label key={b.id} className="flex items-center gap-3 border rounded-lg p-4 cursor-pointer has-[:checked]:border-grass has-[:checked]:bg-grass/5">
-                      <RadioGroupItem value={b.id} />
-                      <div className="flex-1">
-                        <div className="font-medium">{b.name}</div>
-                        <div className="text-xs text-muted-foreground">a.n. {b.holder}</div>
-                      </div>
-                    </label>
-                  ))}
+                <RadioGroup value={paymentMode} onValueChange={(v) => setPaymentMode(v as "online" | "transfer")} className="space-y-2">
+                  <label className="flex items-start gap-3 border rounded-lg p-4 cursor-pointer has-[:checked]:border-grass has-[:checked]:bg-grass/5">
+                    <RadioGroupItem value="online" className="mt-1" />
+                    <div className="flex-1">
+                      <div className="font-medium">Pembayaran Online (Midtrans)</div>
+                      <div className="text-xs text-muted-foreground">QRIS, Virtual Account, e-Wallet, Kartu Kredit — otomatis terverifikasi.</div>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-3 border rounded-lg p-4 cursor-pointer has-[:checked]:border-grass has-[:checked]:bg-grass/5">
+                    <RadioGroupItem value="transfer" className="mt-1" />
+                    <div className="flex-1">
+                      <div className="font-medium">Transfer Bank Manual</div>
+                      <div className="text-xs text-muted-foreground">Unggah bukti transfer; verifikasi oleh admin.</div>
+                    </div>
+                  </label>
                 </RadioGroup>
+                {paymentMode === "transfer" && (
+                  <div className="space-y-2">
+                    <Label className="text-sm">Pilih Bank Tujuan</Label>
+                    <RadioGroup value={bankId} onValueChange={setBankId} className="space-y-2">
+                      {BANKS.map((b) => (
+                        <label key={b.id} className="flex items-center gap-3 border rounded-lg p-3 cursor-pointer has-[:checked]:border-grass has-[:checked]:bg-grass/5">
+                          <RadioGroupItem value={b.id} />
+                          <div className="flex-1">
+                            <div className="font-medium">{b.name}</div>
+                            <div className="text-xs text-muted-foreground">a.n. {b.holder}</div>
+                          </div>
+                        </label>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                )}
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => setStep(1)}>Kembali</Button>
                   <Button onClick={() => setStep(3)}>Lanjut</Button>
@@ -248,7 +270,7 @@ function CheckoutPage() {
                 </div>
                 <div className="border rounded-lg p-4 text-sm">
                   <div>Kurir: <span className="font-medium">{courier.name}</span> ({formatIDR(courier.cost)})</div>
-                  <div>Bank: <span className="font-medium">{bank.name}</span></div>
+                  <div>Pembayaran: <span className="font-medium">{paymentMode === "online" ? "Midtrans (Online)" : `Transfer ${bank.name}`}</span></div>
                 </div>
                 <div className="border rounded-lg divide-y">
                   {items.map((it) => (
