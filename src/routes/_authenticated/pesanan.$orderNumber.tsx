@@ -145,7 +145,7 @@ function OrderDetail() {
                       <span className="font-bold text-forest">{formatIDR(Number(order.total))}</span>
                     </div>
                     <MidtransPaymentButton
-                      orderNumber={order.order_number}
+                      orderNumber={order.order_number ?? orderNumber}
                       className="w-full"
                       onPaid={() => qc.invalidateQueries({ queryKey: ["order", orderNumber] })}
                     />
