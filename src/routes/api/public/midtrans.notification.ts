@@ -79,13 +79,16 @@ export const Route = createFileRoute("/api/public/midtrans/notification")({
           }
         }
 
-        const { error: updErr } = await supabaseAdmin.from("orders").update(update).eq("id", order.id);
+        const { error: updErr } = await supabaseAdmin
+          .from("orders")
+          .update(update as never)
+          .eq("id", order.id);
         if (updErr) return new Response("Update failed", { status: 500 });
 
         if (update.status && update.status !== order.status) {
           await supabaseAdmin.from("order_status_history").insert({
             order_id: order.id,
-            status: update.status as string,
+            status: update.status as never,
             note,
           });
         }
