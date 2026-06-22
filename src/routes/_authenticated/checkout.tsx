@@ -29,6 +29,7 @@ function CheckoutPage() {
   const [step, setStep] = useState(0);
   const [addressId, setAddressId] = useState<string | null>(null);
   const [courierId, setCourierId] = useState<string>(COURIERS[0].id);
+  const [paymentMode, setPaymentMode] = useState<"online" | "transfer">("online");
   const [bankId, setBankId] = useState<string>(BANKS[0].id);
   const [openAddr, setOpenAddr] = useState(false);
   const [voucher, setVoucher] = useState<AppliedVoucher | null>(null);
