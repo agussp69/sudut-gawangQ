@@ -220,18 +220,38 @@ function CheckoutPage() {
                 <h2 className="text-lg font-semibold text-forest flex items-center gap-2">
                   <CreditCard className="h-5 w-5" /> Metode Pembayaran
                 </h2>
-                <p className="text-sm text-muted-foreground">Transfer manual — Anda akan diberikan info rekening setelah pesanan dibuat.</p>
-                <RadioGroup value={bankId} onValueChange={setBankId} className="space-y-2">
-                  {BANKS.map((b) => (
-                    <label key={b.id} className="flex items-center gap-3 border rounded-lg p-4 cursor-pointer has-[:checked]:border-grass has-[:checked]:bg-grass/5">
-                      <RadioGroupItem value={b.id} />
-                      <div className="flex-1">
-                        <div className="font-medium">{b.name}</div>
-                        <div className="text-xs text-muted-foreground">a.n. {b.holder}</div>
-                      </div>
-                    </label>
-                  ))}
+                <RadioGroup value={paymentMode} onValueChange={(v) => setPaymentMode(v as "online" | "transfer")} className="space-y-2">
+                  <label className="flex items-start gap-3 border rounded-lg p-4 cursor-pointer has-[:checked]:border-grass has-[:checked]:bg-grass/5">
+                    <RadioGroupItem value="online" className="mt-1" />
+                    <div className="flex-1">
+                      <div className="font-medium">Pembayaran Online (Midtrans)</div>
+                      <div className="text-xs text-muted-foreground">QRIS, Virtual Account, e-Wallet, Kartu Kredit — otomatis terverifikasi.</div>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-3 border rounded-lg p-4 cursor-pointer has-[:checked]:border-grass has-[:checked]:bg-grass/5">
+                    <RadioGroupItem value="transfer" className="mt-1" />
+                    <div className="flex-1">
+                      <div className="font-medium">Transfer Bank Manual</div>
+                      <div className="text-xs text-muted-foreground">Unggah bukti transfer; verifikasi oleh admin.</div>
+                    </div>
+                  </label>
                 </RadioGroup>
+                {paymentMode === "transfer" && (
+                  <div className="space-y-2">
+                    <Label className="text-sm">Pilih Bank Tujuan</Label>
+                    <RadioGroup value={bankId} onValueChange={setBankId} className="space-y-2">
+                      {BANKS.map((b) => (
+                        <label key={b.id} className="flex items-center gap-3 border rounded-lg p-3 cursor-pointer has-[:checked]:border-grass has-[:checked]:bg-grass/5">
+                          <RadioGroupItem value={b.id} />
+                          <div className="flex-1">
+                            <div className="font-medium">{b.name}</div>
+                            <div className="text-xs text-muted-foreground">a.n. {b.holder}</div>
+                          </div>
+                        </label>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                )}
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => setStep(1)}>Kembali</Button>
                   <Button onClick={() => setStep(3)}>Lanjut</Button>
