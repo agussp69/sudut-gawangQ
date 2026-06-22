@@ -85,11 +85,12 @@ function CheckoutPage() {
   const placeOrder = useMutation({
     mutationFn: async () => {
       if (!selectedAddress) throw new Error("Pilih alamat terlebih dahulu");
+      const paymentLabel = paymentMode === "online" ? "Midtrans" : bank.name;
       const { data, error } = await supabase.rpc("place_order", {
         p_shipping_address: selectedAddress as unknown as never,
         p_courier: courier.name,
         p_shipping_cost: courier.cost,
-        p_payment_method: bank.name,
+        p_payment_method: paymentLabel,
         ...(voucher?.code ? { p_voucher_code: voucher.code } : {}),
       } as never);
       if (error) throw error;
