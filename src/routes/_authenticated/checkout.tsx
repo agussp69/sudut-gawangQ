@@ -89,9 +89,8 @@ function CheckoutPage() {
         p_courier: courier.name,
         p_shipping_cost: courier.cost,
         p_payment_method: bank.name,
-        p_notes: null,
-        p_voucher_code: voucher?.code ?? null,
-      });
+        ...(voucher?.code ? { p_voucher_code: voucher.code } : {}),
+      } as never);
       if (error) throw error;
       return data?.[0];
     },
