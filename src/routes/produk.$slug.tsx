@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { resolveProductImage, formatIDR } from "@/lib/product-assets";
+import { RatingStars } from "@/components/account/RatingStars";
 
 export const Route = createFileRoute("/produk/$slug")({
   loader: async ({ params }) => {
@@ -103,6 +104,24 @@ function ProductDetail() {
     enabled: !!product.category_id,
   });
 
+  const reviewsQuery = useQuery({
+    queryKey: ["reviews", product.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("reviews")
+        .select("id, rating, comment, created_at, user_id, profile:profiles(full_name,avatar_url)")
+        .eq("product_id", product.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      return data ?? [];
+    },
+  });
+
+  const reviews = reviewsQuery.data ?? [];
+  const avgRating = reviews.length
+    ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+    : 0;
+
   async function addToCart() {
     if (!size) return toast.error("Pilih ukuran terlebih dahulu");
     const { data: sess } = await supabase.auth.getSession();
@@ -187,6 +206,14 @@ function ProductDetail() {
               <p className="text-sm text-muted-foreground mt-2">
                 {product.club} · {product.country} · {product.season}
               </p>
+
+              {reviews.length > 0 && (
+                <div className="flex items-center gap-2 mt-3">
+                  <RatingStars value={avgRating} />
+                  <span className="text-sm font-medium text-forest">{avgRating.toFixed(1)}</span>
+                  <span className="text-xs text-muted-foreground">({reviews.length} ulasan)</span>
+                </div>
+              )}
 
               <div className="flex items-center gap-2 mt-4">
                 <ShieldCheck className="h-5 w-5 text-grass" />
@@ -315,7 +342,43 @@ function ProductDetail() {
                         loading="lazy"
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
+          </div>
+
+          {/* Reviews */}
+          <section className="mt-20 pt-10 border-t">
+            <h2 className="text-2xl font-extrabold tracking-tight text-forest mb-6">Ulasan Pelanggan</h2>
+            {reviewsQuery.isLoading ? (
+              <Skeleton className="h-32" />
+            ) : reviews.length === 0 ? (
+              <p className="text-muted-foreground text-sm">Belum ada ulasan untuk produk ini.</p>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-4">
+                {reviews.map((r) => {
+                  const profile = r.profile as { full_name?: string | null } | null;
+                  return (
+                    <div key={r.id} className="border rounded-lg p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-full bg-grass/10 grid place-items-center font-bold text-grass text-sm">
+                          {(profile?.full_name ?? "U")[0].toUpperCase()}
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-medium text-sm text-forest">{profile?.full_name ?? "Pelanggan"}</div>
+                          <div className="flex items-center gap-2">
+                            <RatingStars value={r.rating} size={12} />
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(r.created_at).toLocaleDateString("id-ID")}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      {r.comment && <p className="text-sm mt-3 text-foreground/80">{r.comment}</p>}
                     </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
                     <p className="text-xs text-muted-foreground mt-3">{p.club}</p>
                     <h3 className="text-sm font-semibold text-forest mt-1 line-clamp-1 group-hover:text-grass">
                       {p.name}
